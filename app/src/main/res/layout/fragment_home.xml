@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/swipe_refresh"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/bg_main">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -14,27 +15,43 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="16dp">
+            android:paddingBottom="24dp">
+
+            <!-- Horizontal Categories Bar -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_categories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="6dp" />
 
             <!-- Breaking News Marquee Card -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_breaking_news"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="12dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="4dp"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
                 android:visibility="gone"
                 app:cardBackgroundColor="#FEF2F2"
                 app:cardCornerRadius="8dp"
-                app:cardElevation="1dp">
+                app:cardElevation="1dp"
+                app:strokeColor="#FECACA"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="8dp">
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -43,7 +60,8 @@
                         android:fontFamily="sans-serif-black"
                         android:text="@string/breaking_news_badge"
                         android:textColor="@color/white"
-                        android:textSize="10sp" />
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_breaking_news_title"
@@ -55,20 +73,10 @@
                         android:marqueeRepeatLimit="marquee_forever"
                         android:singleLine="true"
                         android:textColor="@color/breaking_red"
-                        android:textSize="12sp"
+                        android:textSize="12.5sp"
                         android:textStyle="bold" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Horizontal Categories Bar -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_categories"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:orientation="horizontal"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="8dp" />
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Loading Spinner -->
             <ProgressBar
@@ -76,7 +84,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="48dp"
                 android:indeterminateTint="@color/brand_primary"
                 android:visibility="gone" />
 
@@ -109,13 +117,112 @@
                     android:textColor="@color/white" />
             </LinearLayout>
 
+            <!-- Hero Featured Lead Story Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_hero_featured"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/divider_line"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Featured Big Image -->
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/iv_hero_image"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:scaleType="centerCrop"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.None" />
+
+                    <!-- Hero Content Details -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tv_hero_category"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/badge_breaking"
+                                android:textColor="@color/white"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_hero_date"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:textColor="@color/text_tertiary"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tv_hero_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:lineSpacingMultiplier="1.2"
+                            android:maxLines="3"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_hero_excerpt"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:ellipsize="end"
+                            android:maxLines="2"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Section Title Header -->
+            <TextView
+                android:id="@+id/tv_section_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/latest_news_title"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
             <!-- Main Articles RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_articles"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:paddingHorizontal="8dp" />
+                android:paddingHorizontal="6dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

@@ -10,19 +10,19 @@ data class Category(
     val name: String,
 
     @SerializedName("nameGu")
-    val nameGu: String?,
+    val nameGu: String? = null,
 
     @SerializedName("nameHi")
-    val nameHi: String?,
+    val nameHi: String? = null,
 
     @SerializedName("slug")
     val slug: String,
 
     @SerializedName("color")
-    val color: String?,
+    val color: String? = null,
 
-    @SerializedName("order")
-    val order: Int = 0,
+    @SerializedName("displayOrder")
+    val displayOrder: Int = 0,
 
     @SerializedName("isActive")
     val isActive: Boolean = true
@@ -33,3 +33,8 @@ data class Category(
     val displayName: String
         get() = nameGu?.takeIf { it.isNotBlank() } ?: name
 }
+
+data class CategoriesResponseData(
+    @SerializedName("categories")
+    val categories: List<Category> = emptyList()
+)

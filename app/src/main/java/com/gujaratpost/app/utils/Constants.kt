@@ -1,10 +1,9 @@
 package com.gujaratpost.app.utils
 
 object Constants {
-    // Default base URL for Android Emulator pointing to local Node.js backend (Port 5000)
-    // For a physical device on local Wi-Fi, replace with your PC IP (e.g., "http://192.168.1.X:5000/")
-    // For production backend, use your deployed domain (e.g., "https://api.gujaratpost.com/")
-    const val DEFAULT_BASE_URL = "http://10.0.2.2:5000/"
+    // Production live API endpoint proxying to Render backend
+    const val DEFAULT_BASE_URL = "https://gujaratpost.vercel.app/"
+    const val WEB_BASE_URL = "https://gujaratpost.vercel.app"
 
     // Intent extras
     const val EXTRA_ARTICLE_ID = "extra_article_id"

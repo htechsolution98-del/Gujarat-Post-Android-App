@@ -33,7 +33,6 @@ class ArticleDetailActivity : AppCompatActivity() {
         setupToolbar(articleTitle)
         setupShareAction()
 
-        // Fetch full article details from backend
         val queryParam = articleSlug.ifBlank { articleId }
         if (queryParam.isNotBlank()) {
             loadArticleDetail(queryParam)
@@ -52,7 +51,8 @@ class ArticleDetailActivity : AppCompatActivity() {
     private fun setupShareAction() {
         binding.ivShareBtn.setOnClickListener {
             val article = currentArticle ?: return@setOnClickListener
-            val shareText = "${article.displayTitle}\n\nવધુ વાંચો ગુજરાત પોસ્ટ પર:\nhttps://gujaratpost.vercel.app/news/${article.slug}"
+            val shareUrl = "${Constants.WEB_BASE_URL}/news/${article.slug}"
+            val shareText = "${article.displayTitle}\n\nવધુ વાંચો ગુજરાત પોસ્ટ પર:\n$shareUrl"
 
             val sendIntent = Intent().apply {
                 action = Intent.ACTION_SEND
@@ -84,7 +84,10 @@ class ArticleDetailActivity : AppCompatActivity() {
     private fun displayArticle(article: Article) {
         binding.tvDetailTitle.text = article.displayTitle
         binding.tvDetailCategory.text = article.categoryName
-        binding.tvDetailDate.text = DateFormatter.formatIsoDate(article.publishedAt ?: article.createdAt)
+        
+        val dateStr = DateFormatter.formatIsoDate(article.publishedAt ?: article.createdAt)
+        val authorName = article.author?.displayName ?: "ગુજરાત પોસ્ટ બ્યુરો"
+        binding.tvDetailDate.text = "$authorName • $dateStr"
 
         // Parse HTML content or excerpt
         val rawContent = article.displayContent
@@ -97,10 +100,11 @@ class ArticleDetailActivity : AppCompatActivity() {
         binding.tvDetailContent.text = formattedContent
 
         // Featured image
-        if (!article.featuredImage.isNullOrBlank()) {
+        val imageUrl = article.resolvedImageUrl
+        if (!imageUrl.isNullOrBlank()) {
             binding.ivDetailImage.visibility = View.VISIBLE
             Glide.with(this)
-                .load(article.featuredImage)
+                .load(imageUrl)
                 .placeholder(R.drawable.rounded_card_bg)
                 .error(R.drawable.rounded_card_bg)
                 .into(binding.ivDetailImage)

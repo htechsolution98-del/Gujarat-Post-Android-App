@@ -43,17 +43,8 @@ class ArticleAdapter(
             binding.tvDate.text = DateFormatter.formatIsoDate(article.publishedAt ?: article.createdAt)
             binding.tvCategoryTag.text = article.categoryName
 
-            // Custom category color badge if available
-            article.category?.color?.let { hex ->
-                try {
-                    binding.tvCategoryTag.background.setTint(Color.parseColor(hex))
-                } catch (e: Exception) {
-                    // Fallback to default
-                }
-            }
-
-            // Thumbnail image loading via Glide
-            val imageUrl = article.featuredImage
+            // Thumbnail image loading via Glide with resolved full URL
+            val imageUrl = article.resolvedImageUrl
             if (!imageUrl.isNullOrBlank()) {
                 binding.ivThumbnail.visibility = View.VISIBLE
                 Glide.with(context)

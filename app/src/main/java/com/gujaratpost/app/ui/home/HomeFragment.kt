@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.gujaratpost.app.R
 import com.gujaratpost.app.data.api.RetrofitClient
 import com.gujaratpost.app.data.models.Article
@@ -16,6 +17,7 @@ import com.gujaratpost.app.databinding.FragmentHomeBinding
 import com.gujaratpost.app.ui.category.CategoryAdapter
 import com.gujaratpost.app.ui.detail.ArticleDetailActivity
 import com.gujaratpost.app.utils.Constants
+import com.gujaratpost.app.utils.DateFormatter
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -80,14 +82,14 @@ class HomeFragment : Fragment() {
                 // 3. Fetch latest articles
                 fetchArticles(selectedCategorySlug)
 
-                binding.swipeRefresh.isRefreshing = false
-                binding.progressLoading.visibility = View.GONE
             } catch (e: Exception) {
-                binding.swipeRefresh.isRefreshing = false
-                binding.progressLoading.visibility = View.GONE
                 if (articleAdapter.itemCount == 0) {
                     binding.layoutError.visibility = View.VISIBLE
+                    binding.tvErrorMessage.text = "સમાચાર લોડ કરી શકાયા નથી: ${e.localizedMessage ?: "નેટવર્ક એરર"}"
                 }
+            } finally {
+                binding.swipeRefresh.isRefreshing = false
+                binding.progressLoading.visibility = View.GONE
             }
         }
     }
@@ -96,19 +98,23 @@ class HomeFragment : Fragment() {
         try {
             val response = RetrofitClient.apiService.getCategories()
             if (response.isSuccessful && response.body()?.success == true) {
-                val list = response.body()?.data.orEmpty()
+                val list = response.body()?.data?.categories.orEmpty()
                 val allCategory = Category(
                     id = "all",
                     name = "All",
                     nameGu = getString(R.string.cat_all),
                     nameHi = "सभी",
-                    slug = "all",
-                    color = null
+                    slug = "all"
                 )
                 val fullList = mutableListOf(allCategory).apply { addAll(list) }
 
                 val catAdapter = CategoryAdapter(fullList) { category ->
                     selectedCategorySlug = category?.slug
+                    binding.tvSectionHeader.text = if (category != null && category.slug != "all") {
+                        "${category.displayName} સમાચાર"
+                    } else {
+                        getString(R.string.latest_news_title)
+                    }
                     lifecycleScope.launch {
                         binding.progressLoading.visibility = View.VISIBLE
                         fetchArticles(selectedCategorySlug)
@@ -121,19 +127,20 @@ class HomeFragment : Fragment() {
                 }
             }
         } catch (e: Exception) {
-            // Keep default layout on error
+            // Keep default layout on category error
         }
     }
 
     private suspend fun fetchBreakingNews() {
         try {
-            val response = RetrofitClient.apiService.getBreakingNews()
+            val response = RetrofitClient.apiService.getBreakingArticles(isBreaking = true, limit = 5)
             if (response.isSuccessful && response.body()?.success == true) {
-                val breaking = response.body()?.data.orEmpty()
+                val breaking = response.body()?.data?.articles.orEmpty()
                 if (breaking.isNotEmpty()) {
                     val first = breaking[0]
                     binding.cardBreakingNews.visibility = View.VISIBLE
                     binding.tvBreakingNewsTitle.text = first.displayTitle
+                    binding.tvBreakingNewsTitle.isSelected = true // Start marquee
                     binding.cardBreakingNews.setOnClickListener {
                         openArticleDetail(first)
                     }
@@ -150,16 +157,28 @@ class HomeFragment : Fragment() {
         try {
             val response = RetrofitClient.apiService.getArticles(
                 page = 1,
-                limit = 25,
+                limit = 30,
                 categorySlug = if (categorySlug == "all") null else categorySlug,
                 sort = "latest"
             )
 
             if (response.isSuccessful && response.body()?.success == true) {
                 val articles = response.body()?.data?.articles.orEmpty()
-                articleAdapter.submitList(articles)
-                binding.layoutError.visibility = if (articles.isEmpty()) View.VISIBLE else View.GONE
-                if (articles.isEmpty()) {
+
+                if (articles.isNotEmpty()) {
+                    binding.layoutError.visibility = View.GONE
+
+                    // First article becomes the Hero Featured card
+                    val heroArticle = articles[0]
+                    setupHeroFeaturedCard(heroArticle)
+
+                    // Remaining articles go into the feed
+                    val feedArticles = if (articles.size > 1) articles.subList(1, articles.size) else emptyList()
+                    articleAdapter.submitList(feedArticles)
+                } else {
+                    binding.cardHeroFeatured.visibility = View.GONE
+                    articleAdapter.submitList(emptyList())
+                    binding.layoutError.visibility = View.VISIBLE
                     binding.tvErrorMessage.text = getString(R.string.no_articles_found)
                 }
             } else {
@@ -170,7 +189,32 @@ class HomeFragment : Fragment() {
         } catch (e: Exception) {
             if (articleAdapter.itemCount == 0) {
                 binding.layoutError.visibility = View.VISIBLE
+                binding.tvErrorMessage.text = "સમાચાર લોડ કરી શકાયા નથી: ${e.localizedMessage ?: "ઇન્ટરનેટ કનેક્શન તપાસો"}"
             }
+        }
+    }
+
+    private fun setupHeroFeaturedCard(article: Article) {
+        binding.cardHeroFeatured.visibility = View.VISIBLE
+        binding.tvHeroTitle.text = article.displayTitle
+        binding.tvHeroExcerpt.text = article.displayExcerpt
+        binding.tvHeroCategory.text = article.categoryName
+        binding.tvHeroDate.text = DateFormatter.formatIsoDate(article.publishedAt ?: article.createdAt)
+
+        val imageUrl = article.resolvedImageUrl
+        if (!imageUrl.isNullOrBlank()) {
+            binding.ivHeroImage.visibility = View.VISIBLE
+            Glide.with(this)
+                .load(imageUrl)
+                .placeholder(R.drawable.rounded_card_bg)
+                .error(R.drawable.rounded_card_bg)
+                .into(binding.ivHeroImage)
+        } else {
+            binding.ivHeroImage.visibility = View.GONE
+        }
+
+        binding.cardHeroFeatured.setOnClickListener {
+            openArticleDetail(article)
         }
     }
 

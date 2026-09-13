@@ -73,7 +73,7 @@ class CategoryFragment : Fragment() {
             try {
                 val response = RetrofitClient.apiService.getCategories()
                 if (response.isSuccessful && response.body()?.success == true) {
-                    categoriesList = response.body()?.data.orEmpty()
+                    categoriesList = response.body()?.data?.categories.orEmpty()
                     setupTabs()
                 }
             } catch (e: Exception) {

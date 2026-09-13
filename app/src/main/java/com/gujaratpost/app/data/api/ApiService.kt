@@ -3,7 +3,7 @@ package com.gujaratpost.app.data.api
 import com.gujaratpost.app.data.models.ApiResponse
 import com.gujaratpost.app.data.models.Article
 import com.gujaratpost.app.data.models.ArticlesResponseData
-import com.gujaratpost.app.data.models.Category
+import com.gujaratpost.app.data.models.CategoriesResponseData
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -25,6 +25,15 @@ interface ApiService {
     ): Response<ApiResponse<ArticlesResponseData>>
 
     /**
+     * Get breaking news articles using query param
+     */
+    @GET("api/public/articles")
+    suspend fun getBreakingArticles(
+        @Query("isBreaking") isBreaking: Boolean = true,
+        @Query("limit") limit: Int = 5
+    ): Response<ApiResponse<ArticlesResponseData>>
+
+    /**
      * Get single article details by ID or Slug
      */
     @GET("api/public/articles/{slugOrId}")
@@ -36,17 +45,5 @@ interface ApiService {
      * Get active news categories
      */
     @GET("api/public/categories")
-    suspend fun getCategories(): Response<ApiResponse<List<Category>>>
-
-    /**
-     * Get breaking news list
-     */
-    @GET("api/public/breaking")
-    suspend fun getBreakingNews(): Response<ApiResponse<List<Article>>>
-
-    /**
-     * Get trending news list
-     */
-    @GET("api/public/trending")
-    suspend fun getTrendingNews(): Response<ApiResponse<List<Article>>>
+    suspend fun getCategories(): Response<ApiResponse<CategoriesResponseData>>
 }
