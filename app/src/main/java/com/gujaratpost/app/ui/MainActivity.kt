@@ -45,11 +45,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnSearch.setOnClickListener {
             showSearchDialog()
         }
-
-        // Overflow 3-dots action
-        binding.btnOverflowMenu.setOnClickListener {
-            showAboutDialog()
-        }
     }
 
     private fun setupNavigationDrawer() {
@@ -134,10 +129,9 @@ class MainActivity : AppCompatActivity() {
             binding.bottomNavigation.selectedItemId = R.id.nav_saved
         }
 
-        // Settings / About
+        // Settings
         binding.navDrawer.menuDrawerSettings.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            showAboutDialog()
         }
     }
 
@@ -188,14 +182,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .setNegativeButton("રદ કરો", null)
-            .show()
-    }
-
-    private fun showAboutDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("ગુજરાત પોસ્ટ (Gujarat Post)")
-            .setMessage("સત્ય અને સચોટ સમાચાર.\n\nઆવૃત્તિ: 1.0.0 (Production Live)\nબેકએન્ડ: Live Render API & MySQL\n© 2026 ગુજરાત પોસ્ટ મીડિયા નેટવર્ક.")
-            .setPositiveButton("ઠીક છે", null)
             .show()
     }
 

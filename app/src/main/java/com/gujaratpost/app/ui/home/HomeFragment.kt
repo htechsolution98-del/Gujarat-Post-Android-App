@@ -19,7 +19,7 @@ import com.gujaratpost.app.ui.category.CategoryAdapter
 import com.gujaratpost.app.ui.detail.ArticleDetailActivity
 import com.gujaratpost.app.utils.Constants
 import com.gujaratpost.app.utils.DateFormatter
-import kotlinx.coroutines.async
+import com.gujaratpost.app.utils.NewsCacheManager
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -46,6 +46,11 @@ class HomeFragment : Fragment() {
 
         setupRecyclerView()
         setupSwipeRefresh()
+
+        // 1. Instant offline cache load (zero-wait display)
+        loadCachedData()
+
+        // 2. Fresh live network fetch
         loadData(isPullToRefresh = false)
     }
 
@@ -60,6 +65,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnRetry.setOnClickListener {
+            binding.layoutError.visibility = View.GONE
             loadData(isPullToRefresh = false)
         }
     }
@@ -68,6 +74,25 @@ class HomeFragment : Fragment() {
         binding.swipeRefresh.setColorSchemeResources(R.color.brand_primary)
         binding.swipeRefresh.setOnRefreshListener {
             loadData(isPullToRefresh = true)
+        }
+    }
+
+    private fun loadCachedData() {
+        try {
+            val cached = NewsCacheManager.getCachedArticles(requireContext())
+            if (cached.isNotEmpty()) {
+                currentHeroArticle = cached[0]
+                setupHeroFeaturedCard(cached[0])
+
+                val feed: List<Article> = if (cached.size > 1) cached.subList(1, cached.size) else emptyList()
+                currentFeedArticles = feed
+                articleAdapter.submitList(feed)
+
+                binding.progressLoading.visibility = View.GONE
+                binding.layoutError.visibility = View.GONE
+            }
+        } catch (e: Exception) {
+            // Ignore cache read failures
         }
     }
 
@@ -84,26 +109,24 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadData(isPullToRefresh: Boolean) {
-        if (!isPullToRefresh) {
+        // Only show spinner if there is no content already on screen
+        if (!isPullToRefresh && articleAdapter.itemCount == 0 && currentHeroArticle == null) {
             binding.progressLoading.visibility = View.VISIBLE
         }
-        binding.layoutError.visibility = View.GONE
+
+        // Independent non-blocking coroutines: articles are prioritized!
+        lifecycleScope.launch {
+            fetchArticles(selectedCategorySlug)
+            binding.progressLoading.visibility = View.GONE
+            binding.swipeRefresh.isRefreshing = false
+        }
 
         lifecycleScope.launch {
-            try {
-                val catDeferred = async { fetchCategories() }
-                val breakingDeferred = async { fetchBreakingNews() }
-                val articlesDeferred = async { fetchArticles(selectedCategorySlug) }
+            fetchCategories()
+        }
 
-                catDeferred.await()
-                breakingDeferred.await()
-                articlesDeferred.await()
-            } catch (e: Exception) {
-                // Individual handlers manage errors
-            } finally {
-                binding.progressLoading.visibility = View.GONE
-                binding.swipeRefresh.isRefreshing = false
-            }
+        lifecycleScope.launch {
+            fetchBreakingNews()
         }
     }
 
@@ -181,6 +204,13 @@ class HomeFragment : Fragment() {
                 if (articles.isNotEmpty()) {
                     binding.layoutError.visibility = View.GONE
 
+                    // Save to local cache for instant offline loading on next app start
+                    if (categorySlug == null || categorySlug == "all") {
+                        context?.let { ctx ->
+                            NewsCacheManager.saveCachedArticles(ctx, articles)
+                        }
+                    }
+
                     // First article becomes the Hero Featured card
                     val heroArticle = articles[0]
                     currentHeroArticle = heroArticle
@@ -191,22 +221,25 @@ class HomeFragment : Fragment() {
                     currentFeedArticles = feedArticles
                     articleAdapter.submitList(feedArticles)
                 } else {
-                    currentHeroArticle = null
-                    currentFeedArticles = emptyList()
-                    binding.cardHeroFeatured.visibility = View.GONE
-                    articleAdapter.submitList(emptyList<Article>())
-                    binding.layoutError.visibility = View.VISIBLE
-                    binding.tvErrorMessage.text = getString(R.string.no_articles_found)
+                    if (articleAdapter.itemCount == 0 && currentHeroArticle == null) {
+                        binding.cardHeroFeatured.visibility = View.GONE
+                        articleAdapter.submitList(emptyList<Article>())
+                        binding.layoutError.visibility = View.VISIBLE
+                        binding.tvErrorMessage.text = getString(R.string.no_articles_found)
+                    }
                 }
             } else {
-                if (articleAdapter.itemCount == 0) {
+                // If API returned error but we already have content from cache, keep showing it!
+                if (articleAdapter.itemCount == 0 && currentHeroArticle == null) {
                     binding.layoutError.visibility = View.VISIBLE
+                    binding.tvErrorMessage.text = "સમાચાર લોડ કરી શકાયા નથી. કૃપા કરીને ફરી પ્રયાસ કરો."
                 }
             }
         } catch (e: Exception) {
-            if (articleAdapter.itemCount == 0) {
+            // NEVER wipe or hide existing articles on network timeout!
+            if (articleAdapter.itemCount == 0 && currentHeroArticle == null) {
                 binding.layoutError.visibility = View.VISIBLE
-                binding.tvErrorMessage.text = "સમાચાર લોડ કરી શકાયા નથી: ${e.localizedMessage ?: "ઇન્ટરનેટ કનેક્શન તપાસો"}"
+                binding.tvErrorMessage.text = "ઇન્ટરનેટ કનેક્શન ધીમું છે. કૃપા કરીને ફરી પ્રયાસ કરો."
             }
         }
     }
