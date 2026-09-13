@@ -31,7 +31,6 @@ data class Author(
 data class Article(
     @SerializedName("id")
     val id: String,
-) : Serializable {
 
     @SerializedName("slug")
     val slug: String,
@@ -114,7 +113,7 @@ data class Article(
 
     @SerializedName("author")
     val author: Author? = null
-) {
+) : Serializable {
     /**
      * Resolves the article headline in Gujarati if available, else standard title.
      */

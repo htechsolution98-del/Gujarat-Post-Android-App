@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.tabs.TabLayout
 import com.gujaratpost.app.R
+import com.gujaratpost.app.data.ArticleRepository
 import com.gujaratpost.app.data.api.RetrofitClient
 import com.gujaratpost.app.data.models.Article
 import com.gujaratpost.app.data.models.Category

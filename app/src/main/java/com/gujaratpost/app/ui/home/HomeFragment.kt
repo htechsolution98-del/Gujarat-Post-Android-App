@@ -187,14 +187,14 @@ class HomeFragment : Fragment() {
                     setupHeroFeaturedCard(heroArticle)
 
                     // Remaining articles go into the feed
-                    val feedArticles = if (articles.size > 1) articles.subList(1, articles.size) else emptyList()
+                    val feedArticles: List<Article> = if (articles.size > 1) articles.subList(1, articles.size) else emptyList()
                     currentFeedArticles = feedArticles
                     articleAdapter.submitList(feedArticles)
                 } else {
                     currentHeroArticle = null
                     currentFeedArticles = emptyList()
                     binding.cardHeroFeatured.visibility = View.GONE
-                    articleAdapter.submitList(emptyList())
+                    articleAdapter.submitList(emptyList<Article>())
                     binding.layoutError.visibility = View.VISIBLE
                     binding.tvErrorMessage.text = getString(R.string.no_articles_found)
                 }
