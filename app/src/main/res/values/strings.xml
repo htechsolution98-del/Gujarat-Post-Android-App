@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">ગુજરાત પોસ્ટ</string>
+    <string name="app_name_en">Gujarat Post</string>
+    <string name="tagline">સત્ય અને સચોટ સમાચાર</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">મુખ્ય</string>
+    <string name="nav_categories">શ્રેણીઓ</string>
+    <string name="nav_breaking">બ્રેકિંગ</string>
+    <string name="nav_saved">બુકમાર્ક્સ</string>
+
+    <!-- Actions & Labels -->
+    <string name="breaking_news_badge">બ્રેકિંગ ન્યૂઝ</string>
+    <string name="trending_news_title">ટ્રેન્ડિંગ સમાચાર</string>
+    <string name="latest_news_title">તાજા સમાચાર</string>
+    <string name="read_more">વધુ વાંચો</string>
+    <string name="share_news">શેર કરો</string>
+    <string name="share_via">સમાચાર શેર કરો:</string>
+    <string name="retry">ફરી પ્રયાસ કરો</string>
+    <string name="loading">લોડ થઈ રહ્યું છે...</string>
+    <string name="error_loading_news">સમાચાર લોડ કરવામાં સમસ્યા આવી છે. કૃપા કરીને ઇન્ટરનેટ કનેક્શન તપાસો.</string>
+    <string name="no_articles_found">કોઈ સમાચાર મળ્યા નથી.</string>
+
+    <!-- Categories -->
+    <string name="cat_all">બધા</string>
+    <string name="cat_gujarat">ગુજરાત</string>
+    <string name="cat_national">દેશ</string>
+    <string name="cat_world">વિદેશ</string>
+    <string name="cat_business">વેપાર</string>
+    <string name="cat_sports">સ્પોર્ટ્સ</string>
+    <string name="cat_entertainment">મનોરંજન</string>
+</resources>
