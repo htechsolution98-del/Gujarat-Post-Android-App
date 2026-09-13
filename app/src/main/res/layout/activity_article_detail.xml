@@ -1,118 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_main">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/app_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/Theme.GujaratPost">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar_detail"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/brand_primary"
-            app:navigationIcon="@drawable/ic_arrow_back"
-            app:navigationIconTint="@color/white"
-            app:title="@string/app_name"
-            app:titleTextColor="@color/white" />
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+    <!-- Top App Bar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar_detail"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/brand_primary"
+        android:elevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/white">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="48dp">
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingEnd="12dp">
 
-            <!-- Featured Image -->
-            <ImageView
-                android:id="@+id/iv_detail_image"
-                android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:contentDescription="@string/app_name"
-                android:scaleType="centerCrop" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/tv_detail_header_title"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/app_name"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-                <!-- Metadata Row (Category & Date) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+            <!-- Page counter (e.g., "1 / 15") -->
+            <TextView
+                android:id="@+id/tv_page_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:textColor="#E0E0E0"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/tv_detail_category"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/badge_breaking"
-                        android:textColor="@color/white"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+            <!-- Bookmark Button -->
+            <ImageView
+                android:id="@+id/btn_bookmark"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/nav_saved"
+                android:padding="6dp"
+                android:src="@drawable/ic_bookmark"
+                app:tint="@color/white" />
 
-                    <TextView
-                        android:id="@+id/tv_detail_date"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-
-                    <ImageView
-                        android:id="@+id/iv_share_btn"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/share_news"
-                        android:padding="4dp"
-                        android:src="@drawable/ic_share"
-                        app:tint="@color/brand_primary" />
-                </LinearLayout>
-
-                <!-- Article Title -->
-                <TextView
-                    android:id="@+id/tv_detail_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingMultiplier="1.2"
-                    android:textColor="@color/text_primary"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <!-- Divider -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="16dp"
-                    android:background="@color/divider_line" />
-
-                <!-- Full Article Content -->
-                <TextView
-                    android:id="@+id/tv_detail_content"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:lineSpacingExtra="6dp"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
-
-            </LinearLayout>
+            <!-- Share Button -->
+            <ImageView
+                android:id="@+id/btn_share"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/share_news"
+                android:padding="6dp"
+                android:src="@drawable/ic_share"
+                app:tint="@color/white" />
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </com.google.android.material.appbar.MaterialToolbar>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <!-- ViewPager2 for horizontal news story swiping -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager_articles"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/layout_swipe_hint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_detail" />
+
+    <!-- Bottom Swipe Hint Banner -->
+    <LinearLayout
+        android:id="@+id/layout_swipe_hint"
+        android:layout_width="0dp"
+        android:layout_height="28dp"
+        android:background="#212121"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="← બીજા સમાચાર માટે સ્વાઇપ કરો →"
+            android:textColor="#B0BEC5"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -47,7 +47,12 @@ class CategoryFragment : Fragment() {
 
     private fun setupRecyclerView() {
         articleAdapter = ArticleAdapter { article ->
+            val articles = articleAdapter.currentList
+            ArticleRepository.currentArticles = articles
+            ArticleRepository.currentPosition = articles.indexOfFirst { it.id == article.id }.coerceAtLeast(0)
+
             val intent = Intent(requireContext(), ArticleDetailActivity::class.java).apply {
+                putExtra("EXTRA_ARTICLE_POSITION", ArticleRepository.currentPosition)
                 putExtra(Constants.EXTRA_ARTICLE_ID, article.id)
                 putExtra(Constants.EXTRA_ARTICLE_SLUG, article.slug)
                 putExtra(Constants.EXTRA_ARTICLE_TITLE, article.displayTitle)

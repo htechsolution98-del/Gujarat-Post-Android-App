@@ -3,6 +3,8 @@ package com.gujaratpost.app.data.models
 import com.google.gson.annotations.SerializedName
 import com.gujaratpost.app.utils.Constants
 
+import java.io.Serializable
+
 data class Author(
     @SerializedName("id")
     val id: String? = null,
@@ -21,7 +23,7 @@ data class Author(
 
     @SerializedName("image")
     val image: String? = null
-) {
+) : Serializable {
     val displayName: String
         get() = nameGu?.takeIf { it.isNotBlank() } ?: name ?: "ગુજરાત પોસ્ટ બ્યુરો"
 }
@@ -29,6 +31,7 @@ data class Author(
 data class Article(
     @SerializedName("id")
     val id: String,
+) : Serializable {
 
     @SerializedName("slug")
     val slug: String,
@@ -162,4 +165,9 @@ data class ArticlesResponseData(
 
     @SerializedName("totalPages")
     val totalPages: Int = 1
+)
+
+data class ArticleDetailResponseData(
+    @SerializedName("article")
+    val article: Article? = null
 )

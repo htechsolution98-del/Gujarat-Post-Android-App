@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.gujaratpost.app.R
+import com.gujaratpost.app.data.ArticleRepository
 import com.gujaratpost.app.data.api.RetrofitClient
 import com.gujaratpost.app.data.models.Article
 import com.gujaratpost.app.data.models.Category
@@ -18,6 +19,7 @@ import com.gujaratpost.app.ui.category.CategoryAdapter
 import com.gujaratpost.app.ui.detail.ArticleDetailActivity
 import com.gujaratpost.app.utils.Constants
 import com.gujaratpost.app.utils.DateFormatter
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -27,6 +29,8 @@ class HomeFragment : Fragment() {
 
     private lateinit var articleAdapter: ArticleAdapter
     private var selectedCategorySlug: String? = null
+    private var currentHeroArticle: Article? = null
+    private var currentFeedArticles: List<Article> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,7 +46,7 @@ class HomeFragment : Fragment() {
 
         setupRecyclerView()
         setupSwipeRefresh()
-        loadData()
+        loadData(isPullToRefresh = false)
     }
 
     private fun setupRecyclerView() {
@@ -56,40 +60,49 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnRetry.setOnClickListener {
-            loadData()
+            loadData(isPullToRefresh = false)
         }
     }
 
     private fun setupSwipeRefresh() {
         binding.swipeRefresh.setColorSchemeResources(R.color.brand_primary)
         binding.swipeRefresh.setOnRefreshListener {
-            loadData()
+            loadData(isPullToRefresh = true)
         }
     }
 
-    private fun loadData() {
-        binding.progressLoading.visibility = View.VISIBLE
+    fun filterByCategory(categorySlug: String?, categoryName: String? = null) {
+        selectedCategorySlug = if (categorySlug == "all") null else categorySlug
+        if (_binding != null) {
+            binding.tvSectionHeader.text = if (!categoryName.isNullOrBlank()) {
+                "$categoryName સમાચાર"
+            } else {
+                getString(R.string.latest_news_title)
+            }
+            loadData(isPullToRefresh = true)
+        }
+    }
+
+    private fun loadData(isPullToRefresh: Boolean) {
+        if (!isPullToRefresh) {
+            binding.progressLoading.visibility = View.VISIBLE
+        }
         binding.layoutError.visibility = View.GONE
 
         lifecycleScope.launch {
             try {
-                // 1. Fetch categories
-                fetchCategories()
+                val catDeferred = async { fetchCategories() }
+                val breakingDeferred = async { fetchBreakingNews() }
+                val articlesDeferred = async { fetchArticles(selectedCategorySlug) }
 
-                // 2. Fetch breaking news
-                fetchBreakingNews()
-
-                // 3. Fetch latest articles
-                fetchArticles(selectedCategorySlug)
-
+                catDeferred.await()
+                breakingDeferred.await()
+                articlesDeferred.await()
             } catch (e: Exception) {
-                if (articleAdapter.itemCount == 0) {
-                    binding.layoutError.visibility = View.VISIBLE
-                    binding.tvErrorMessage.text = "સમાચાર લોડ કરી શકાયા નથી: ${e.localizedMessage ?: "નેટવર્ક એરર"}"
-                }
+                // Individual handlers manage errors
             } finally {
-                binding.swipeRefresh.isRefreshing = false
                 binding.progressLoading.visibility = View.GONE
+                binding.swipeRefresh.isRefreshing = false
             }
         }
     }
@@ -116,9 +129,9 @@ class HomeFragment : Fragment() {
                         getString(R.string.latest_news_title)
                     }
                     lifecycleScope.launch {
-                        binding.progressLoading.visibility = View.VISIBLE
+                        binding.swipeRefresh.isRefreshing = true
                         fetchArticles(selectedCategorySlug)
-                        binding.progressLoading.visibility = View.GONE
+                        binding.swipeRefresh.isRefreshing = false
                     }
                 }
                 binding.rvCategories.apply {
@@ -170,12 +183,16 @@ class HomeFragment : Fragment() {
 
                     // First article becomes the Hero Featured card
                     val heroArticle = articles[0]
+                    currentHeroArticle = heroArticle
                     setupHeroFeaturedCard(heroArticle)
 
                     // Remaining articles go into the feed
                     val feedArticles = if (articles.size > 1) articles.subList(1, articles.size) else emptyList()
+                    currentFeedArticles = feedArticles
                     articleAdapter.submitList(feedArticles)
                 } else {
+                    currentHeroArticle = null
+                    currentFeedArticles = emptyList()
                     binding.cardHeroFeatured.visibility = View.GONE
                     articleAdapter.submitList(emptyList())
                     binding.layoutError.visibility = View.VISIBLE
@@ -219,7 +236,20 @@ class HomeFragment : Fragment() {
     }
 
     private fun openArticleDetail(article: Article) {
+        // Collect full active articles list for horizontal swiping
+        val allArticles = mutableListOf<Article>()
+        currentHeroArticle?.let { allArticles.add(it) }
+        allArticles.addAll(currentFeedArticles)
+
+        if (allArticles.isEmpty()) {
+            allArticles.add(article)
+        }
+
+        ArticleRepository.currentArticles = allArticles
+        ArticleRepository.currentPosition = allArticles.indexOfFirst { it.id == article.id }.coerceAtLeast(0)
+
         val intent = Intent(requireContext(), ArticleDetailActivity::class.java).apply {
+            putExtra("EXTRA_ARTICLE_POSITION", ArticleRepository.currentPosition)
             putExtra(Constants.EXTRA_ARTICLE_ID, article.id)
             putExtra(Constants.EXTRA_ARTICLE_SLUG, article.slug)
             putExtra(Constants.EXTRA_ARTICLE_TITLE, article.displayTitle)

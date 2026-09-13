@@ -24,9 +24,18 @@
     <!-- Categories -->
     <string name="cat_all">બધા</string>
     <string name="cat_gujarat">ગુજરાત</string>
-    <string name="cat_national">દેશ</string>
+    <string name="cat_national">દેશ / ભારત</string>
     <string name="cat_world">વિદેશ</string>
     <string name="cat_business">વેપાર</string>
     <string name="cat_sports">સ્પોર્ટ્સ</string>
     <string name="cat_entertainment">મનોરંજન</string>
+    <string name="cat_politics">રાજકારણ</string>
+    <string name="cat_popular">લોકપ્રિય વાર્તાઓ</string>
+    <string name="cat_factcheck">ફેક્ટ ચેક</string>
+    <string name="cat_gallery">ગેલેરી</string>
+    <string name="cat_saved_title">સેવ કરેલા સમાચાર</string>
+    <string name="cat_settings">સેટિંગ્સ</string>
+    <string name="article_saved_toast">સમાચાર બુકમાર્ક્સમાં સેવ કર્યા</string>
+    <string name="article_unsaved_toast">સમાચાર બુકમાર્ક્સમાંથી હટાવ્યા</string>
+    <string name="no_saved_articles">તમે હજુ સુધી કોઈ સમાચાર સેવ કર્યા નથી.</string>
 </resources>

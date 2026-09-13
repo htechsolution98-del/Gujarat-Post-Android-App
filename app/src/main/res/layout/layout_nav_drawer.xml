@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="280dp"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    android:background="#121212"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical">
+
+    <!-- Drawer Header matching Screenshot 3 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#1A1A1A"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="18dp">
+
+        <ImageView
+            android:id="@+id/btn_close_drawer"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/white" />
+
+        <!-- Red Brand Pill -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:background="@drawable/badge_breaking"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:letterSpacing="0.04"
+                android:text="GUJARAT POST"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=".in"
+                android:textColor="#FFEBEE"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#262626" />
+
+    <!-- Drawer Menu Items Scrollable -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingVertical="12dp">
+
+            <!-- 1. Home -->
+            <TextView
+                android:id="@+id/menu_drawer_home"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="Home (મુખ્ય)"
+                android:textColor="#E53935"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- 2. Gujarat -->
+            <TextView
+                android:id="@+id/menu_drawer_gujarat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="Gujarat (ગુજરાત)"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <!-- 3. National -->
+            <TextView
+                android:id="@+id/menu_drawer_national"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="National (ભારત)"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <!-- 4. International -->
+            <TextView
+                android:id="@+id/menu_drawer_world"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="International (વિશ્વ)"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <!-- 5. Entertainment / Life Style -->
+            <TextView
+                android:id="@+id/menu_drawer_entertainment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="Entertainment/Life Style (મનોરંજન)"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <!-- 6. Popular Stories -->
+            <TextView
+                android:id="@+id/menu_drawer_popular"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="Popular Stories (લોકપ્રિય વાર્તાઓ)"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <!-- 7. Gallery / Videos -->
+            <TextView
+                android:id="@+id/menu_drawer_gallery"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="Gallery &amp; Videos (વીડિયો)"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <!-- 8. Politics -->
+            <TextView
+                android:id="@+id/menu_drawer_politics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="Politics (રાજકારણ)"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <!-- 9. Fact Check -->
+            <TextView
+                android:id="@+id/menu_drawer_factcheck"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="Fact Check (ફેક્ટ ચેક)"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="12dp"
+                android:background="#262626" />
+
+            <!-- 10. Saved Articles with Bookmark Icon -->
+            <LinearLayout
+                android:id="@+id/menu_drawer_saved"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@string/cat_saved_title"
+                    android:src="@drawable/ic_bookmark"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Saved Articles (સેવ કરેલા)"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- 11. Settings with Gear Icon -->
+            <LinearLayout
+                android:id="@+id/menu_drawer_settings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@string/cat_settings"
+                    android:src="@drawable/ic_settings"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Settings (સેટિંગ્સ)"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Version Footer -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#0A0A0A"
+        android:padding="14dp"
+        android:text="ગુજરાત પોસ્ટ • v1.0.0 Live"
+        android:textAlignment="center"
+        android:textColor="#757575"
+        android:textSize="11sp" />
+
+</LinearLayout>

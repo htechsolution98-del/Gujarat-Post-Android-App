@@ -39,7 +39,7 @@ interface ApiService {
     @GET("api/public/articles/{slugOrId}")
     suspend fun getArticleDetail(
         @Path("slugOrId") slugOrId: String
-    ): Response<ApiResponse<Article>>
+    ): Response<ApiResponse<com.gujaratpost.app.data.models.ArticleDetailResponseData>>
 
     /**
      * Get active news categories
