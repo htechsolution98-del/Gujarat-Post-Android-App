@@ -1,9 +1,10 @@
 package com.gujaratpost.app.ui
 
-import android.content.Intent
+import android.content.Context
 import android.os.Bundle
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
@@ -31,8 +32,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupTopToolbar()
+        setupInlineSearch()
         setupNavigationDrawer()
-        setupBottomNavigation()
     }
 
     private fun setupTopToolbar() {
@@ -41,9 +42,61 @@ class MainActivity : AppCompatActivity() {
             binding.drawerLayout.openDrawer(GravityCompat.START)
         }
 
-        // Search action
+        // Open inline search bar in-place (NO popups!)
         binding.btnSearch.setOnClickListener {
-            showSearchDialog()
+            openInlineSearch()
+        }
+    }
+
+    private fun setupInlineSearch() {
+        binding.btnCloseSearch.setOnClickListener {
+            closeInlineSearch()
+        }
+
+        binding.btnExecuteSearch.setOnClickListener {
+            executeSearch()
+        }
+
+        binding.etInlineSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
+                executeSearch()
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun openInlineSearch() {
+        binding.layoutNormalHeader.visibility = View.GONE
+        binding.layoutSearchInline.visibility = View.VISIBLE
+        binding.etInlineSearch.requestFocus()
+
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.showSoftInput(binding.etInlineSearch, InputMethodManager.SHOW_IMPLICIT)
+    }
+
+    private fun closeInlineSearch() {
+        binding.etInlineSearch.text.clear()
+        binding.layoutSearchInline.visibility = View.GONE
+        binding.layoutNormalHeader.visibility = View.VISIBLE
+
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(binding.etInlineSearch.windowToken, 0)
+
+        // Reset home filter
+        replaceFragment(homeFragment)
+        homeFragment.filterByCategory("all")
+    }
+
+    private fun executeSearch() {
+        val query = binding.etInlineSearch.text.toString().trim()
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(binding.etInlineSearch.windowToken, 0)
+
+        if (query.isNotBlank()) {
+            replaceFragment(homeFragment)
+            homeFragment.filterByCategory(null, "શોધ: $query")
         }
     }
 
@@ -55,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         // Home
         binding.navDrawer.menuDrawerHome.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
+            replaceFragment(homeFragment)
             homeFragment.filterByCategory("all", "બધા")
         }
 
@@ -63,7 +116,6 @@ class MainActivity : AppCompatActivity() {
         binding.navDrawer.menuDrawerGujarat.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             replaceFragment(homeFragment)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
             homeFragment.filterByCategory("gujarat", "ગુજરાત")
         }
 
@@ -71,7 +123,6 @@ class MainActivity : AppCompatActivity() {
         binding.navDrawer.menuDrawerNational.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             replaceFragment(homeFragment)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
             homeFragment.filterByCategory("national", "રાષ્ટ્રીય")
         }
 
@@ -79,7 +130,6 @@ class MainActivity : AppCompatActivity() {
         binding.navDrawer.menuDrawerWorld.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             replaceFragment(homeFragment)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
             homeFragment.filterByCategory("world", "વિશ્વ")
         }
 
@@ -87,7 +137,6 @@ class MainActivity : AppCompatActivity() {
         binding.navDrawer.menuDrawerEntertainment.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             replaceFragment(homeFragment)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
             homeFragment.filterByCategory("entertainment", "મનોરંજન")
         }
 
@@ -95,7 +144,6 @@ class MainActivity : AppCompatActivity() {
         binding.navDrawer.menuDrawerPopular.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             replaceFragment(homeFragment)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
             homeFragment.filterByCategory("trending", "લોકપ્રિય વાર્તાઓ")
         }
 
@@ -103,7 +151,6 @@ class MainActivity : AppCompatActivity() {
         binding.navDrawer.menuDrawerGallery.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             replaceFragment(homeFragment)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
             homeFragment.filterByCategory("videos", "વીડિયો & ગેલેરી")
         }
 
@@ -111,7 +158,6 @@ class MainActivity : AppCompatActivity() {
         binding.navDrawer.menuDrawerPolitics.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             replaceFragment(homeFragment)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
             homeFragment.filterByCategory("politics", "રાજકારણ")
         }
 
@@ -119,44 +165,18 @@ class MainActivity : AppCompatActivity() {
         binding.navDrawer.menuDrawerFactcheck.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             replaceFragment(homeFragment)
-            binding.bottomNavigation.selectedItemId = R.id.nav_home
             homeFragment.filterByCategory("factcheck", "ફેક્ટ ચેક")
         }
 
         // Saved Articles
         binding.navDrawer.menuDrawerSaved.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-            binding.bottomNavigation.selectedItemId = R.id.nav_saved
+            replaceFragment(savedArticlesFragment)
         }
 
-        // Settings
+        // Settings / About: silently closes drawer, NO popups!
         binding.navDrawer.menuDrawerSettings.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
-        }
-    }
-
-    private fun setupBottomNavigation() {
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    replaceFragment(homeFragment)
-                    true
-                }
-                R.id.nav_categories -> {
-                    replaceFragment(categoryFragment)
-                    true
-                }
-                R.id.nav_breaking -> {
-                    replaceFragment(homeFragment)
-                    homeFragment.filterByCategory("breaking", "બ્રેકિંગ")
-                    true
-                }
-                R.id.nav_saved -> {
-                    replaceFragment(savedArticlesFragment)
-                    true
-                }
-                else -> false
-            }
         }
     }
 
@@ -166,28 +186,11 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    private fun showSearchDialog() {
-        val input = android.widget.EditText(this).apply {
-            hint = "સમાચાર શોધો... (Search news)"
-            setPadding(40, 30, 40, 30)
-        }
-        AlertDialog.Builder(this)
-            .setTitle("સમાચાર શોધો")
-            .setView(input)
-            .setPositiveButton("શોધો") { _, _ ->
-                val query = input.text.toString().trim()
-                if (query.isNotBlank()) {
-                    replaceFragment(homeFragment)
-                    homeFragment.filterByCategory(null, "શોધ: $query")
-                }
-            }
-            .setNegativeButton("રદ કરો", null)
-            .show()
-    }
-
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+        if (binding.layoutSearchInline.visibility == View.VISIBLE) {
+            closeInlineSearch()
+        } else if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
         } else {
             super.onBackPressed()

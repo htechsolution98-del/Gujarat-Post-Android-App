@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         android:background="@color/bg_main">
 
-        <!-- Top App Bar matching Screenshot 4 -->
+        <!-- Top App Bar -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/top_toolbar"
             android:layout_width="0dp"
@@ -24,7 +24,9 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
+            <!-- 1. Normal Header State -->
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_normal_header"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:paddingHorizontal="12dp">
@@ -43,45 +45,28 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:tint="#111111" />
 
-                <!-- Center Logo Pill matching Screenshot 4 -->
-                <LinearLayout
+                <!-- Official Gujarat Post Logo -->
+                <ImageView
+                    android:id="@+id/iv_header_logo"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/badge_breaking"
-                    android:gravity="center"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="5dp"
+                    android:layout_height="38dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@string/app_name"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/gujarat_post_logo"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/btn_search"
                     app:layout_constraintStart_toEndOf="@id/btn_hamburger"
-                    app:layout_constraintTop_toTopOf="parent">
+                    app:layout_constraintTop_toTopOf="parent" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif-black"
-                        android:letterSpacing="0.04"
-                        android:text="GUJARAT POST"
-                        android:textColor="@color/white"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=".in"
-                        android:textColor="#FFCDD2"
-                        android:textSize="10sp" />
-                </LinearLayout>
-
-                <!-- Search Action -->
+                <!-- Search Action Button -->
                 <ImageView
                     android:id="@+id/btn_search"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Search"
-                    android:padding="6dp"
+                    android:padding="7dp"
                     android:src="@drawable/ic_search"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -89,31 +74,64 @@
                     app:tint="#222222" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- 2. Inline Search Bar State (Opens in-place, NO pop-ups!) -->
+            <LinearLayout
+                android:id="@+id/layout_search_inline"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="8dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/btn_close_search"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Back"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="#111111" />
+
+                <EditText
+                    android:id="@+id/et_inline_search"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rounded_card_bg"
+                    android:hint="સમાચાર શોધો... (Search news)"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="#9E9E9E"
+                    android:textSize="15sp" />
+
+                <ImageView
+                    android:id="@+id/btn_execute_search"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Search"
+                    android:padding="7dp"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/brand_primary" />
+            </LinearLayout>
+
         </com.google.android.material.appbar.MaterialToolbar>
 
-        <!-- Fragment Container -->
+        <!-- Fragment Container (Takes full height below toolbar, NO bottom nav!) -->
         <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/top_toolbar" />
-
-        <!-- Bottom Navigation Bar -->
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottom_navigation"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="@color/surface_card"
-            android:elevation="8dp"
-            app:itemIconTint="@color/brand_primary"
-            app:itemTextColor="@color/brand_primary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:menu="@menu/bottom_nav_menu" />
+            app:layout_constraintTop_toBottomOf="@id/top_toolbar" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

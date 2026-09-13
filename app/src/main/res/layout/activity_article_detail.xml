@@ -5,77 +5,107 @@
     android:layout_height="match_parent"
     android:background="@color/bg_main">
 
-    <!-- Top App Bar -->
+    <!-- Top App Bar matching Home Page Aesthetic & Logo -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar_detail"
         android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/brand_primary"
-        android:elevation="4dp"
+        android:layout_height="56dp"
+        android:background="@color/white"
+        android:elevation="3dp"
+        app:contentInsetStart="0dp"
+        app:contentInsetEnd="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:navigationIcon="@drawable/ic_arrow_back"
-        app:navigationIconTint="@color/white">
+        app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingEnd="12dp">
+            android:paddingHorizontal="8dp">
 
-            <TextView
-                android:id="@+id/tv_detail_header_title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:fontFamily="sans-serif-black"
-                android:text="@string/app_name"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+            <!-- Back Arrow -->
+            <ImageView
+                android:id="@+id/btn_back_detail"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back"
+                android:padding="8dp"
+                android:src="@drawable/ic_arrow_back"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#111111" />
 
-            <!-- Page counter (e.g., "1 / 15") -->
-            <TextView
-                android:id="@+id/tv_page_indicator"
+            <!-- Official Gujarat Post Logo -->
+            <ImageView
+                android:id="@+id/iv_detail_logo"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                android:textColor="#E0E0E0"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:layout_height="34dp"
+                android:layout_marginStart="4dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/app_name"
+                android:scaleType="fitCenter"
+                android:src="@drawable/gujarat_post_logo"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/btn_back_detail"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- Bookmark Button -->
-            <ImageView
-                android:id="@+id/btn_bookmark"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/nav_saved"
-                android:padding="6dp"
-                android:src="@drawable/ic_bookmark"
-                app:tint="@color/white" />
+            <!-- Action Container (Page counter + Bookmark + Share) -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-            <!-- Share Button -->
-            <ImageView
-                android:id="@+id/btn_share"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/share_news"
-                android:padding="6dp"
-                android:src="@drawable/ic_share"
-                app:tint="@color/white" />
-        </LinearLayout>
+                <!-- Page counter (e.g. "1 / 30") -->
+                <TextView
+                    android:id="@+id/tv_page_indicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="#757575"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <!-- Bookmark Button -->
+                <ImageView
+                    android:id="@+id/btn_bookmark"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/nav_saved"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_bookmark"
+                    app:tint="#222222" />
+
+                <!-- Share Button -->
+                <ImageView
+                    android:id="@+id/btn_share"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/share_news"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_share"
+                    app:tint="#222222" />
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.appbar.MaterialToolbar>
 
-    <!-- ViewPager2 for horizontal news story swiping -->
+    <!-- ViewPager2 for horizontal news story swiping with 3D page curl animation -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/view_pager_articles"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         app:layout_constraintBottom_toTopOf="@id/layout_swipe_hint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -86,7 +116,7 @@
         android:id="@+id/layout_swipe_hint"
         android:layout_width="0dp"
         android:layout_height="28dp"
-        android:background="#212121"
+        android:background="#1E1E1E"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"

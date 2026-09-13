@@ -17,16 +17,21 @@
             android:orientation="vertical"
             android:paddingBottom="24dp">
 
-            <!-- Horizontal Categories Bar -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_categories"
+            <!-- Black Horizontal Categories Ticker Bar matching Screenshot 4 -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:orientation="horizontal"
-                android:paddingHorizontal="10dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="6dp" />
+                android:layout_height="44dp"
+                android:background="#000000"
+                android:elevation="2dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_categories"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="4dp" />
+            </FrameLayout>
 
             <!-- Breaking News Marquee Card -->
             <com.google.android.material.card.MaterialCardView

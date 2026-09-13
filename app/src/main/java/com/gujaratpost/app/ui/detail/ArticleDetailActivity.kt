@@ -49,7 +49,7 @@ class ArticleDetailActivity : AppCompatActivity() {
     }
 
     private fun setupToolbar() {
-        binding.toolbarDetail.setNavigationOnClickListener {
+        binding.btnBackDetail.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
     }
@@ -57,6 +57,13 @@ class ArticleDetailActivity : AppCompatActivity() {
     private fun setupViewPager(startPos: Int) {
         val adapter = ArticlePagerAdapter(articlesList)
         binding.viewPagerArticles.adapter = adapter
+        binding.viewPagerArticles.clipChildren = false
+        binding.viewPagerArticles.clipToPadding = false
+        (binding.viewPagerArticles.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView)?.apply {
+            clipChildren = false
+            clipToPadding = false
+        }
+        binding.viewPagerArticles.setPageTransformer(NewspaperPageTransformer())
         binding.viewPagerArticles.setCurrentItem(startPos, false)
         currentIndex = startPos
 

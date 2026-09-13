@@ -2,10 +2,9 @@ package com.gujaratpost.app.ui.category
 
 import android.graphics.Color
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.gujaratpost.app.R
 import com.gujaratpost.app.data.models.Category
 import com.gujaratpost.app.databinding.ItemCategoryChipBinding
 
@@ -43,17 +42,16 @@ class CategoryAdapter(
 
         fun bind(position: Int) {
             val item = categories[position]
-            binding.tvCategoryName.text = item.displayName
+            binding.tvCategoryName.text = item.displayName.uppercase()
 
             val isSelected = position == selectedIndex
-            val context = binding.root.context
 
             if (isSelected) {
-                binding.tvCategoryName.setBackgroundResource(R.drawable.badge_breaking)
-                binding.tvCategoryName.setTextColor(ContextCompat.getColor(context, R.color.white))
+                binding.tvCategoryName.setTextColor(Color.WHITE)
+                binding.viewIndicator.visibility = View.VISIBLE
             } else {
-                binding.tvCategoryName.setBackgroundResource(R.drawable.rounded_card_bg)
-                binding.tvCategoryName.setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                binding.tvCategoryName.setTextColor(Color.parseColor("#B0BEC5"))
+                binding.viewIndicator.visibility = View.GONE
             }
 
             binding.root.setOnClickListener {
