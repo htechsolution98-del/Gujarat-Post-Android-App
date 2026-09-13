@@ -5,11 +5,17 @@ import androidx.viewpager2.widget.ViewPager2
 import kotlin.math.abs
 
 /**
- * NewspaperPageTransformer gives a realistic 3D newspaper page turn / flip effect
- * when swiping horizontally between news articles.
+ * NewspaperPageTransformer creates an authentic, physical 3D newspaper page turn animation.
  *
- * It applies 3D Y-axis rotation with proper camera perspective, subtle depth scaling,
- * and elevation transitions so the user feels like turning pages of a newspaper.
+ * When swiping left (to read next story):
+ * - The left spine stays anchored at x=0 (cancelling ViewPager2 default slide).
+ * - The current page turns/flips over to the left along the 3D Y-axis.
+ * - The next page unfolds smoothly into view from the right.
+ *
+ * When swiping right (to read previous story):
+ * - The right spine stays anchored at x=width (cancelling ViewPager2 default slide).
+ * - The current page turns/flips over to the right along the 3D Y-axis.
+ * - The previous page unfolds smoothly into view from the left.
  */
 class NewspaperPageTransformer : ViewPager2.PageTransformer {
 
@@ -17,41 +23,74 @@ class NewspaperPageTransformer : ViewPager2.PageTransformer {
         val width = view.width.toFloat()
         val height = view.height.toFloat()
 
-        // Perspective camera distance to prevent near-plane clipping
-        view.cameraDistance = 16000f * view.resources.displayMetrics.density
+        // 3D perspective camera distance (prevents near-plane clipping)
+        view.cameraDistance = 25000f * view.resources.displayMetrics.density
 
         when {
             position < -1f -> {
-                // Way off-screen to the left
+                // Completely off-screen to the left
                 view.alpha = 0f
+                view.visibility = View.INVISIBLE
+                view.translationX = 0f
+                view.rotationY = 0f
             }
             position <= 0f -> {
-                // Page turning to the left (current page turning away or previous settling)
-                view.alpha = 1f - 0.15f * abs(position)
+                // Left page: As position goes 0 -> -1, turns to the left around left spine
+                view.visibility = View.VISIBLE
+
+                // CRITICAL: Cancels ViewPager2 horizontal translation so the spine stays pinned
+                view.translationX = -position * width
+
+                // Pivot on left edge
                 view.pivotX = 0f
                 view.pivotY = height * 0.5f
-                view.rotationY = 55f * position
 
-                val scale = 0.94f + (1f - 0.94f) * (1f - abs(position))
+                // Rotate around Y-axis (0 deg to -90 deg)
+                view.rotationY = 90f * position
+
+                val absPos = abs(position)
+                // Elevation hierarchy
+                view.elevation = (1f - absPos) * 30f + 10f
+
+                // Gentle depth scale
+                val scale = 1f - 0.05f * absPos
                 view.scaleX = scale
                 view.scaleY = scale
-                view.elevation = (1f - abs(position)) * 10f
+
+                // Smooth fade at the extreme edge so mirrored back is never visible
+                view.alpha = if (absPos > 0.95f) 0f else 1f - 0.12f * absPos
             }
             position <= 1f -> {
-                // Page coming from the right (incoming next article or swiping back right)
-                view.alpha = 1f - 0.15f * abs(position)
+                // Right page: As position goes 0 -> 1, turns to the right around right edge
+                view.visibility = View.VISIBLE
+
+                // CRITICAL: Cancels ViewPager2 horizontal translation so the spine stays pinned
+                view.translationX = -position * width
+
+                // Pivot on right edge
                 view.pivotX = width
                 view.pivotY = height * 0.5f
-                view.rotationY = 55f * position
 
-                val scale = 0.94f + (1f - 0.94f) * (1f - abs(position))
+                // Rotate around Y-axis (0 deg to +90 deg)
+                view.rotationY = 90f * position
+
+                val absPos = abs(position)
+                view.elevation = (1f - absPos) * 30f + 5f
+
+                // Gentle depth scale
+                val scale = 1f - 0.05f * absPos
                 view.scaleX = scale
                 view.scaleY = scale
-                view.elevation = (1f - abs(position)) * 10f
+
+                // Smooth fade at the extreme edge
+                view.alpha = if (absPos > 0.95f) 0f else 1f - 0.12f * absPos
             }
             else -> {
-                // Way off-screen to the right
+                // Completely off-screen to the right
                 view.alpha = 0f
+                view.visibility = View.INVISIBLE
+                view.translationX = 0f
+                view.rotationY = 0f
             }
         }
     }

@@ -57,6 +57,7 @@ class ArticleDetailActivity : AppCompatActivity() {
     private fun setupViewPager(startPos: Int) {
         val adapter = ArticlePagerAdapter(articlesList)
         binding.viewPagerArticles.adapter = adapter
+        binding.viewPagerArticles.offscreenPageLimit = 1
         binding.viewPagerArticles.clipChildren = false
         binding.viewPagerArticles.clipToPadding = false
         (binding.viewPagerArticles.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView)?.apply {
