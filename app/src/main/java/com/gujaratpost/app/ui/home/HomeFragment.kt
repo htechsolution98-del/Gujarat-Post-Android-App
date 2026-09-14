@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.gujaratpost.app.R
 import com.gujaratpost.app.data.ArticleRepository
 import com.gujaratpost.app.data.api.RetrofitClient
@@ -27,6 +28,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
+    private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var articleAdapter: ArticleAdapter
     private var selectedCategorySlug: String? = null
     private var currentHeroArticle: Article? = null
@@ -44,14 +46,53 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 1. Initialize category bar immediately with defaults so it never flashes empty
+        setupCategoriesBar()
+
+        // 2. Initialize article feed
         setupRecyclerView()
         setupSwipeRefresh()
 
-        // 1. Instant offline cache load (zero-wait display)
+        // 3. Instant offline cache load (zero-wait display)
         loadCachedData()
 
-        // 2. Fresh live network fetch
+        // 4. Fresh live network fetch
         loadData(isPullToRefresh = false)
+    }
+
+    private fun getDefaultCategories(): List<Category> {
+        return listOf(
+            Category(id = "all", name = "All", nameGu = getString(R.string.cat_all), slug = "all"),
+            Category(id = "cat-breaking", name = "Breaking News", nameGu = getString(R.string.breaking_news_badge), slug = "breaking-news"),
+            Category(id = "cat-gujarat", name = "Gujarat", nameGu = getString(R.string.cat_gujarat), slug = "gujarat"),
+            Category(id = "cat-sports", name = "Sports", nameGu = getString(R.string.cat_sports), slug = "sports"),
+            Category(id = "cat-business", name = "Business", nameGu = getString(R.string.cat_business), slug = "business"),
+            Category(id = "cat-national", name = "National", nameGu = getString(R.string.cat_national), slug = "national"),
+            Category(id = "cat-world", name = "World", nameGu = getString(R.string.cat_world), slug = "world"),
+            Category(id = "cat-entertainment", name = "Entertainment", nameGu = getString(R.string.cat_entertainment), slug = "entertainment")
+        )
+    }
+
+    private fun setupCategoriesBar() {
+        val initialList = getDefaultCategories()
+        categoryAdapter = CategoryAdapter(initialList) { category ->
+            selectedCategorySlug = category?.slug
+            binding.tvSectionHeader.text = if (category != null && category.slug != "all") {
+                "${category.displayName} સમાચાર"
+            } else {
+                getString(R.string.latest_news_title)
+            }
+            lifecycleScope.launch {
+                binding.swipeRefresh.isRefreshing = true
+                fetchArticles(selectedCategorySlug)
+                binding.swipeRefresh.isRefreshing = false
+            }
+        }
+        binding.rvCategories.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            adapter = categoryAdapter
+            setHasFixedSize(true)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -62,6 +103,7 @@ class HomeFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = articleAdapter
             isNestedScrollingEnabled = false
+            setItemViewCacheSize(20)
         }
 
         binding.btnRetry.setOnClickListener {
@@ -88,6 +130,7 @@ class HomeFragment : Fragment() {
                 currentFeedArticles = feed
                 articleAdapter.submitList(feed)
 
+                binding.tvSectionHeader.visibility = View.VISIBLE
                 binding.progressLoading.visibility = View.GONE
                 binding.layoutError.visibility = View.GONE
             }
@@ -135,31 +178,16 @@ class HomeFragment : Fragment() {
             val response = RetrofitClient.apiService.getCategories()
             if (response.isSuccessful && response.body()?.success == true) {
                 val list = response.body()?.data?.categories.orEmpty()
-                val allCategory = Category(
-                    id = "all",
-                    name = "All",
-                    nameGu = getString(R.string.cat_all),
-                    nameHi = "सभी",
-                    slug = "all"
-                )
-                val fullList = mutableListOf(allCategory).apply { addAll(list) }
-
-                val catAdapter = CategoryAdapter(fullList) { category ->
-                    selectedCategorySlug = category?.slug
-                    binding.tvSectionHeader.text = if (category != null && category.slug != "all") {
-                        "${category.displayName} સમાચાર"
-                    } else {
-                        getString(R.string.latest_news_title)
-                    }
-                    lifecycleScope.launch {
-                        binding.swipeRefresh.isRefreshing = true
-                        fetchArticles(selectedCategorySlug)
-                        binding.swipeRefresh.isRefreshing = false
-                    }
-                }
-                binding.rvCategories.apply {
-                    layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                    adapter = catAdapter
+                if (list.isNotEmpty()) {
+                    val allCategory = Category(
+                        id = "all",
+                        name = "All",
+                        nameGu = getString(R.string.cat_all),
+                        nameHi = "सभी",
+                        slug = "all"
+                    )
+                    val fullList = mutableListOf(allCategory).apply { addAll(list) }
+                    categoryAdapter.updateCategories(fullList)
                 }
             }
         } catch (e: Exception) {
@@ -203,6 +231,7 @@ class HomeFragment : Fragment() {
 
                 if (articles.isNotEmpty()) {
                     binding.layoutError.visibility = View.GONE
+                    binding.tvSectionHeader.visibility = View.VISIBLE
 
                     // Save to local cache for instant offline loading on next app start
                     if (categorySlug == null || categorySlug == "all") {
@@ -225,6 +254,7 @@ class HomeFragment : Fragment() {
                 } else {
                     if (articleAdapter.itemCount == 0 && currentHeroArticle == null) {
                         binding.cardHeroFeatured.visibility = View.GONE
+                        binding.tvSectionHeader.visibility = View.GONE
                         articleAdapter.submitList(emptyList<Article>())
                         binding.layoutError.visibility = View.VISIBLE
                         binding.tvErrorMessage.text = getString(R.string.no_articles_found)
@@ -258,6 +288,7 @@ class HomeFragment : Fragment() {
             binding.ivHeroImage.visibility = View.VISIBLE
             Glide.with(this)
                 .load(imageUrl)
+                .transition(DrawableTransitionOptions.withCrossFade(250))
                 .placeholder(R.drawable.rounded_card_bg)
                 .error(R.drawable.rounded_card_bg)
                 .into(binding.ivHeroImage)

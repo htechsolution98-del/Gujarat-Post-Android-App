@@ -9,10 +9,12 @@ import com.gujaratpost.app.data.models.Category
 import com.gujaratpost.app.databinding.ItemCategoryChipBinding
 
 class CategoryAdapter(
-    private val categories: List<Category>,
+    categories: List<Category>,
     private var selectedIndex: Int = 0,
     private val onCategorySelected: (Category?) -> Unit
 ) : RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder>() {
+
+    private val categoryList = categories.toMutableList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
         val binding = ItemCategoryChipBinding.inflate(
@@ -27,7 +29,7 @@ class CategoryAdapter(
         holder.bind(position)
     }
 
-    override fun getItemCount(): Int = categories.size
+    override fun getItemCount(): Int = categoryList.size
 
     fun setSelectedPosition(position: Int) {
         val previous = selectedIndex
@@ -36,12 +38,18 @@ class CategoryAdapter(
         notifyItemChanged(selectedIndex)
     }
 
+    fun updateCategories(newCategories: List<Category>) {
+        categoryList.clear()
+        categoryList.addAll(newCategories)
+        notifyDataSetChanged()
+    }
+
     inner class CategoryViewHolder(
         private val binding: ItemCategoryChipBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(position: Int) {
-            val item = categories[position]
+            val item = categoryList[position]
             binding.tvCategoryName.text = item.displayName.uppercase()
 
             val isSelected = position == selectedIndex

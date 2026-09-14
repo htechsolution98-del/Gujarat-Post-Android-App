@@ -219,7 +219,8 @@
                 android:text="@string/latest_news_title"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <!-- Main Articles RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView

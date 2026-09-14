@@ -18,6 +18,7 @@
         <!-- Main Home & Portal Activity -->
         <activity
             android:name=".ui.MainActivity"
+            android:theme="@style/Theme.GujaratPost.Splash"
             android:exported="true"
             android:launchMode="singleTop"
             android:screenOrientation="portrait">
