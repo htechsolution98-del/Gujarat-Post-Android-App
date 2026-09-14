@@ -213,8 +213,10 @@ class HomeFragment : Fragment() {
 
                     // First article becomes the Hero Featured card
                     val heroArticle = articles[0]
-                    currentHeroArticle = heroArticle
-                    setupHeroFeaturedCard(heroArticle)
+                    if (currentHeroArticle?.id != heroArticle.id) {
+                        currentHeroArticle = heroArticle
+                        setupHeroFeaturedCard(heroArticle)
+                    }
 
                     // Remaining articles go into the feed
                     val feedArticles: List<Article> = if (articles.size > 1) articles.subList(1, articles.size) else emptyList()

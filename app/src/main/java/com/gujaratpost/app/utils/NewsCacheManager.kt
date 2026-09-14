@@ -26,7 +26,7 @@ object NewsCacheManager {
                 // Fallback to defaults
             }
         }
-        return getDefaultArticles()
+        return emptyList()
     }
 
     fun saveCachedArticles(context: Context, articles: List<Article>) {

@@ -1,10 +1,13 @@
 package com.gujaratpost.app.data.api
 
+import com.gujaratpost.app.GujaratPostApp
 import com.gujaratpost.app.utils.Constants
+import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
@@ -13,18 +16,26 @@ object RetrofitClient {
 
     private val loggingInterceptor by lazy {
         HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = HttpLoggingInterceptor.Level.BASIC
         }
     }
 
     private val okHttpClient by lazy {
-        OkHttpClient.Builder()
+        val builder = OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
-            .build()
+
+        try {
+            val cacheDir = File(GujaratPostApp.instance.cacheDir, "http_cache")
+            builder.cache(Cache(cacheDir, 20L * 1024 * 1024))
+        } catch (e: Exception) {
+            // Ignore if context not yet initialized
+        }
+
+        builder.build()
     }
 
     private var retrofitInstance: Retrofit? = null
