@@ -99,3 +99,4 @@ class NewspaperPageTransformer : ViewPager2.PageTransformer {
         // Safe fallback
     }
 }
+}
