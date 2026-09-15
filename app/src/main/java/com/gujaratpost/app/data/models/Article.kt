@@ -33,10 +33,10 @@ data class Author(
 
 data class Article(
     @SerializedName("id")
-    val id: String,
+    val id: String? = null,
 
     @SerializedName("slug")
-    val slug: String,
+    val slug: String? = null,
 
     @SerializedName("articleNumber")
     val articleNumber: Long? = null,
@@ -118,16 +118,28 @@ data class Article(
     val author: Author? = null,
 
     @SerializedName("tags")
-    val tags: List<String> = emptyList(),
+    val tags: List<String>? = null,
 
     @SerializedName("tagsGu")
-    val tagsGu: List<String> = emptyList()
+    val tagsGu: List<String>? = null
 ) : Serializable {
+    val safeId: String
+        get() = id.orEmpty()
+
+    val safeSlug: String
+        get() = slug?.takeIf { it.isNotBlank() } ?: safeId
+
+    val safeTags: List<String>
+        get() {
+            val list = if (!tagsGu.isNullOrEmpty()) tagsGu else tags
+            return list?.filterNotNull()?.filter { it.isNotBlank() } ?: emptyList()
+        }
+
     /**
      * Resolves the article headline in Gujarati if available, else standard title.
      */
     val displayTitle: String
-        get() = titleGu?.takeIf { it.isNotBlank() } ?: title.orEmpty()
+        get() = titleGu?.takeIf { it.isNotBlank() } ?: title?.takeIf { it.isNotBlank() } ?: "ગુજરાત સમાચાર"
 
     /**
      * Resolves the excerpt in Gujarati if available, else standard excerpt.

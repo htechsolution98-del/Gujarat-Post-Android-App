@@ -20,11 +20,13 @@ import kotlin.math.abs
 class NewspaperPageTransformer : ViewPager2.PageTransformer {
 
     override fun transformPage(view: View, position: Float) {
-        val width = view.width.toFloat()
-        val height = view.height.toFloat()
+        try {
+            val width = view.width.toFloat()
+            val height = view.height.toFloat()
+            if (width <= 0f || height <= 0f) return
 
-        // 3D perspective camera distance (prevents near-plane clipping)
-        view.cameraDistance = 25000f * view.resources.displayMetrics.density
+            // 3D perspective camera distance (prevents near-plane clipping)
+            view.cameraDistance = 25000f * view.resources.displayMetrics.density
 
         when {
             position < -1f -> {
@@ -92,6 +94,6 @@ class NewspaperPageTransformer : ViewPager2.PageTransformer {
                 view.translationX = 0f
                 view.rotationY = 0f
             }
-        }
+        } catch (_: Throwable) {}
     }
 }

@@ -24,29 +24,39 @@ class ArticleDetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityArticleDetailBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        try {
+            binding = ActivityArticleDetailBinding.inflate(layoutInflater)
+            setContentView(binding.root)
 
-        val initialPosition = intent.getIntExtra("EXTRA_ARTICLE_POSITION", ArticleRepository.currentPosition)
-        articlesList = ArticleRepository.currentArticles
+            val initialPosition = intent.getIntExtra("EXTRA_ARTICLE_POSITION", ArticleRepository.currentPosition)
+            articlesList = ArticleRepository.currentArticles
 
-        // Fallback: If opened without repository list, create a single article from intent extras
-        if (articlesList.isEmpty()) {
-            val articleId = intent.getStringExtra(Constants.EXTRA_ARTICLE_ID).orEmpty()
-            val articleSlug = intent.getStringExtra(Constants.EXTRA_ARTICLE_SLUG).orEmpty()
-            val articleTitle = intent.getStringExtra(Constants.EXTRA_ARTICLE_TITLE).orEmpty()
-            val single = Article(
-                id = articleId,
-                slug = articleSlug,
-                title = articleTitle,
-                titleGu = articleTitle
-            )
-            articlesList = listOf(single)
+            // Fallback: If opened without repository list, create a single article from intent extras
+            if (articlesList.isEmpty()) {
+                val articleId = intent.getStringExtra(Constants.EXTRA_ARTICLE_ID).orEmpty()
+                val articleSlug = intent.getStringExtra(Constants.EXTRA_ARTICLE_SLUG).orEmpty()
+                val articleTitle = intent.getStringExtra(Constants.EXTRA_ARTICLE_TITLE).orEmpty()
+                val single = Article(
+                    id = articleId,
+                    slug = articleSlug,
+                    title = articleTitle,
+                    titleGu = articleTitle
+                )
+                articlesList = listOf(single)
+            }
+
+            setupToolbar()
+            val safePos = if (articlesList.isNotEmpty()) {
+                initialPosition.coerceIn(0, articlesList.size - 1)
+            } else {
+                0
+            }
+            setupViewPager(safePos)
+            setupActions()
+        } catch (e: Throwable) {
+            android.util.Log.e("ArticleDetailActivity", "Error in onCreate", e)
+            finish()
         }
-
-        setupToolbar()
-        setupViewPager(initialPosition.coerceIn(0, (articlesList.size - 1).coerceAtLeast(0)))
-        setupActions()
     }
 
     private fun setupToolbar() {
@@ -92,7 +102,7 @@ class ArticleDetailActivity : AppCompatActivity() {
 
     private fun updateBookmarkIcon(position: Int) {
         val article = articlesList.getOrNull(position) ?: return
-        val isBookmarked = BookmarkManager.isBookmarked(this, article.id)
+        val isBookmarked = BookmarkManager.isBookmarked(this, article.safeId)
         val iconRes = if (isBookmarked) R.drawable.ic_bookmark_filled else R.drawable.ic_bookmark
         binding.btnBookmark.setImageResource(iconRes)
     }
@@ -116,7 +126,7 @@ class ArticleDetailActivity : AppCompatActivity() {
         // WhatsApp / Native Share
         binding.btnShare.setOnClickListener {
             val article = articlesList.getOrNull(currentIndex) ?: return@setOnClickListener
-            val shareUrl = "${Constants.WEB_BASE_URL}/news/${article.slug}"
+            val shareUrl = "${Constants.WEB_BASE_URL}/news/${article.safeSlug}"
             val shareText = "${article.displayTitle}\n\nવધુ વાંચો ગુજરાત પોસ્ટ પર:\n$shareUrl"
 
             val sendIntent = Intent().apply {
@@ -131,7 +141,7 @@ class ArticleDetailActivity : AppCompatActivity() {
 
     private fun prefetchArticleDetail(position: Int) {
         val article = articlesList.getOrNull(position) ?: return
-        val slugOrId = article.slug.ifBlank { article.id }
+        val slugOrId = article.safeSlug.ifBlank { article.safeId }
         if (slugOrId.isBlank()) return
 
         lifecycleScope.launch {
