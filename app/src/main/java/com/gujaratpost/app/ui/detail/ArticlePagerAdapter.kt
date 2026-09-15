@@ -15,8 +15,17 @@ import com.gujaratpost.app.databinding.ItemArticleDetailPageBinding
 import com.gujaratpost.app.utils.DateFormatter
 
 class ArticlePagerAdapter(
-    private val articles: List<Article>
+    initialArticles: List<Article>
 ) : RecyclerView.Adapter<ArticlePagerAdapter.ArticlePageViewHolder>() {
+
+    private val articles = initialArticles.toMutableList()
+
+    fun updateArticleAt(position: Int, fullArticle: Article) {
+        if (position in 0 until articles.size) {
+            articles[position] = fullArticle
+            notifyItemChanged(position)
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ArticlePageViewHolder {
         val binding = ItemArticleDetailPageBinding.inflate(
@@ -52,21 +61,30 @@ class ArticlePagerAdapter(
             binding.tvPageAuthor.text = "રિપોર્ટ: $authorName"
 
             // Lead excerpt
-            val excerpt = article.displayExcerpt
-            if (excerpt.isNotBlank() && excerpt != article.displayTitle) {
+            val excerpt = article.displayExcerpt.trim()
+            val rawContent = article.displayContent.trim()
+            if (excerpt.isNotBlank() && excerpt != rawContent && excerpt != article.displayTitle.trim()) {
                 binding.tvPageExcerpt.visibility = View.VISIBLE
                 binding.tvPageExcerpt.text = excerpt
             } else {
                 binding.tvPageExcerpt.visibility = View.GONE
             }
 
-            // Full formatted body content
-            val rawContent = article.displayContent
-            val formatted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Html.fromHtml(rawContent, Html.FROM_HTML_MODE_COMPACT)
+            // Full formatted body content (HTML or clean plain text paragraphs)
+            val hasHtml = rawContent.contains("<p>", ignoreCase = true) ||
+                          rawContent.contains("<br", ignoreCase = true) ||
+                          rawContent.contains("<div>", ignoreCase = true) ||
+                          rawContent.contains("<span>", ignoreCase = true)
+
+            val formatted = if (hasHtml) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    Html.fromHtml(rawContent, Html.FROM_HTML_MODE_COMPACT)
+                } else {
+                    @Suppress("DEPRECATION")
+                    Html.fromHtml(rawContent)
+                }
             } else {
-                @Suppress("DEPRECATION")
-                Html.fromHtml(rawContent)
+                rawContent
             }
             binding.tvPageContent.text = formatted
 

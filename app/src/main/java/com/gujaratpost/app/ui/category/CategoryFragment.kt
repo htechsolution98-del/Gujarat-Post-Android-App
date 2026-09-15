@@ -73,16 +73,34 @@ class CategoryFragment : Fragment() {
         }
     }
 
+    private fun getDefaultCategories(): List<Category> {
+        return listOf(
+            Category(id = "cat-gujarat", name = "Gujarat", nameGu = getString(R.string.cat_gujarat), slug = "gujarat"),
+            Category(id = "cat-sports", name = "Sports", nameGu = getString(R.string.cat_sports), slug = "sports"),
+            Category(id = "cat-business", name = "Business", nameGu = getString(R.string.cat_business), slug = "business"),
+            Category(id = "cat-national", name = "National", nameGu = getString(R.string.cat_national), slug = "national"),
+            Category(id = "cat-world", name = "World", nameGu = getString(R.string.cat_world), slug = "world"),
+            Category(id = "cat-entertainment", name = "Entertainment", nameGu = getString(R.string.cat_entertainment), slug = "entertainment"),
+            Category(id = "cat-videos", name = "Videos", nameGu = "વીડિયો", slug = "videos")
+        )
+    }
+
     private fun loadCategoriesAndArticles() {
         binding.progressCatLoading.visibility = View.VISIBLE
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.apiService.getCategories()
                 if (response.isSuccessful && response.body()?.success == true) {
-                    categoriesList = response.body()?.data?.categories.orEmpty()
-                    setupTabs()
+                    val remoteCats = response.body()?.data?.categories.orEmpty()
+                    categoriesList = if (remoteCats.isNotEmpty()) remoteCats else getDefaultCategories()
+                } else {
+                    categoriesList = getDefaultCategories()
                 }
+                setupTabs()
             } catch (e: Exception) {
+                categoriesList = getDefaultCategories()
+                setupTabs()
+            } finally {
                 binding.progressCatLoading.visibility = View.GONE
             }
         }

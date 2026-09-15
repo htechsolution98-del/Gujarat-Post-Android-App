@@ -26,7 +26,7 @@ object NewsCacheManager {
                 // Fallback to defaults
             }
         }
-        return emptyList()
+        return getDefaultArticles()
     }
 
     fun saveCachedArticles(context: Context, articles: List<Article>) {
@@ -99,6 +99,42 @@ object NewsCacheManager {
                 author = defaultAuthor,
                 publishedAt = "2026-08-22T08:00:00.000Z",
                 views = 1205
+            ),
+            Article(
+                id = "art-gift-city-fintech",
+                slug = "business-gift-city-expansion",
+                title = "ગિફ્ટ સિટીમાં વધુ 15 ગ્લોબલ ફિનટેક કંપનીઓ શરૂ કરશે કામગીરી: 10,000 નવી નોકરીઓનું સર્જન",
+                titleGu = "ગિફ્ટ સિટીમાં વધુ 15 ગ્લોબલ ફિનટેક કંપનીઓ શરૂ કરશે કામગીરી: 10,000 નવી નોકરીઓનું સર્જન",
+                excerpt = "ગાંધીનગર સ્થિત ગિફ્ટ સિટીમાં આંતરરાષ્ટ્રીય નાણાકીય સંસ્થાઓનું રોકાણ વધ્યું.",
+                excerptGu = "ગાંધીનગર સ્થિત ગિફ્ટ સિટીમાં આંતરરાષ્ટ્રીય નાણાકીય સંસ્થાઓનું રોકાણ વધ્યું.",
+                content = "ગુજરાત ઇન્ટરનેશનલ ફાઇનાન્સ ટેક-સિટી (GIFT City) વૈશ્વિક ફાઇનાન્સ હબ તરીકે ઝડપથી ઊભરી રહ્યું છે.",
+                contentGu = "ગુજરાત ઇન્ટરનેશનલ ફાઇનાન્સ ટેક-સિટી (GIFT City) વૈશ્વિક ફાઇનાન્સ હબ તરીકે ઝડપથી ઊભરી રહ્યું છે.",
+                image = "https://gujaratpost.vercel.app/assets/demo/5.jpg",
+                featuredImage = "https://gujaratpost.vercel.app/assets/demo/5.jpg",
+                category = "Business",
+                categoryGu = "વેપાર",
+                location = "GIFT City",
+                author = defaultAuthor,
+                publishedAt = "2026-08-23T10:30:00.000Z",
+                views = 980
+            ),
+            Article(
+                id = "art-sports-cricket-india",
+                slug = "sports-india-series-win",
+                title = "ટીમ ઈન્ડિયાનો શાનદાર વિજય: સીરિઝમાં મેળવી અજેય સરસાઈ, યુવા ખેલાડીઓનું દમદાર પ્રદર્શન",
+                titleGu = "ટીમ ઈન્ડિયાનો શાનદાર વિજય: સીરિઝમાં મેળવી અજેય સરસાઈ, યુવા ખેલાડીઓનું દમદાર પ્રદર્શન",
+                excerpt = "ઓલરાઉન્ડ પ્રદર્શનના જોરે ભારતે પ્રતિસ્પર્ધી ટીમને કારમી હાર આપી.",
+                excerptGu = "ઓલરાઉન્ડ પ્રદર્શનના જોરે ભારતે પ્રતિસ્પર્ધી ટીમને કારમી હાર આપી.",
+                content = "ભારતીય ક્રિકેટ ટીમે જોરદાર રમત બતાવીને શ્રેણી પોતાના નામે કરી લીધી છે.",
+                contentGu = "ભારતીય ક્રિકેટ ટીમે જોરદાર રમત બતાવીને શ્રેણી પોતાના નામે કરી લીધી છે.",
+                image = "https://gujaratpost.vercel.app/assets/demo/5.jpg",
+                featuredImage = "https://gujaratpost.vercel.app/assets/demo/5.jpg",
+                category = "Sports",
+                categoryGu = "સ્પોર્ટ્સ",
+                location = "Ahmedabad",
+                author = defaultAuthor,
+                publishedAt = "2026-08-24T14:15:00.000Z",
+                views = 1530
             )
         )
     }

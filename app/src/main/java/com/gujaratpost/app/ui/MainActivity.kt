@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_GujaratPost)
         super.onCreate(savedInstanceState)
+        com.gujaratpost.app.data.api.RetrofitClient.initFromPreferences(this)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -85,9 +86,10 @@ class MainActivity : AppCompatActivity() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
         imm?.hideSoftInputFromWindow(binding.etInlineSearch.windowToken, 0)
 
-        // Reset home filter
+        // Reset home filter and drawer highlight
+        highlightDrawerCategoryBySlug("all")
         replaceFragment(homeFragment)
-        homeFragment.filterByCategory("all")
+        homeFragment.filterByCategory("all", "બધા")
     }
 
     private fun executeSearch() {
@@ -101,6 +103,61 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val drawerMenuItems by lazy {
+        listOf(
+            binding.navDrawer.menuDrawerHome,
+            binding.navDrawer.menuDrawerGujarat,
+            binding.navDrawer.menuDrawerNational,
+            binding.navDrawer.menuDrawerWorld,
+            binding.navDrawer.menuDrawerEntertainment,
+            binding.navDrawer.menuDrawerPopular,
+            binding.navDrawer.menuDrawerGallery,
+            binding.navDrawer.menuDrawerPolitics,
+            binding.navDrawer.menuDrawerFactcheck
+        )
+    }
+
+    private fun selectDrawerCategory(selectedView: android.widget.TextView, slug: String, nameGu: String) {
+        highlightDrawerItem(selectedView)
+        binding.drawerLayout.closeDrawer(GravityCompat.START)
+        replaceFragment(homeFragment)
+        homeFragment.filterByCategory(slug, nameGu)
+    }
+
+    private fun highlightDrawerItem(targetView: android.widget.TextView?) {
+        for (item in drawerMenuItems) {
+            if (item == targetView) {
+                // RED active text and bold font
+                item.setTextColor(android.graphics.Color.parseColor("#E53935"))
+                item.setTypeface(null, android.graphics.Typeface.BOLD)
+            } else {
+                // Clean white inactive text
+                item.setTextColor(android.graphics.Color.WHITE)
+                item.setTypeface(null, android.graphics.Typeface.NORMAL)
+            }
+        }
+    }
+
+    /**
+     * Programmatically syncs the drawer highlight when category is selected from HomeFragment
+     */
+    fun highlightDrawerCategoryBySlug(slug: String?) {
+        val targetSlug = if (slug.isNullOrBlank() || slug == "all") "all" else slug.lowercase().trim()
+        val targetView = when {
+            targetSlug == "all" -> binding.navDrawer.menuDrawerHome
+            targetSlug.contains("gujarat") -> binding.navDrawer.menuDrawerGujarat
+            targetSlug.contains("national") || targetSlug.contains("bharat") -> binding.navDrawer.menuDrawerNational
+            targetSlug.contains("world") || targetSlug.contains("international") -> binding.navDrawer.menuDrawerWorld
+            targetSlug.contains("entertainment") -> binding.navDrawer.menuDrawerEntertainment
+            targetSlug.contains("popular") || targetSlug.contains("trending") -> binding.navDrawer.menuDrawerPopular
+            targetSlug.contains("gallery") || targetSlug.contains("video") -> binding.navDrawer.menuDrawerGallery
+            targetSlug.contains("politics") -> binding.navDrawer.menuDrawerPolitics
+            targetSlug.contains("fact") -> binding.navDrawer.menuDrawerFactcheck
+            else -> null
+        }
+        highlightDrawerItem(targetView)
+    }
+
     private fun setupNavigationDrawer() {
         binding.navDrawer.btnCloseDrawer.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -108,65 +165,47 @@ class MainActivity : AppCompatActivity() {
 
         // Home
         binding.navDrawer.menuDrawerHome.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("all", "બધા")
+            selectDrawerCategory(binding.navDrawer.menuDrawerHome, "all", "બધા")
         }
 
         // Gujarat
         binding.navDrawer.menuDrawerGujarat.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("gujarat", "ગુજરાત")
+            selectDrawerCategory(binding.navDrawer.menuDrawerGujarat, "gujarat", "ગુજરાત")
         }
 
         // National
         binding.navDrawer.menuDrawerNational.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("national", "રાષ્ટ્રીય")
+            selectDrawerCategory(binding.navDrawer.menuDrawerNational, "national", "રાષ્ટ્રીય")
         }
 
         // World
         binding.navDrawer.menuDrawerWorld.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("world", "વિશ્વ")
+            selectDrawerCategory(binding.navDrawer.menuDrawerWorld, "world", "વિશ્વ")
         }
 
         // Entertainment
         binding.navDrawer.menuDrawerEntertainment.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("entertainment", "મનોરંજન")
+            selectDrawerCategory(binding.navDrawer.menuDrawerEntertainment, "entertainment", "મનોરંજન")
         }
 
         // Popular Stories
         binding.navDrawer.menuDrawerPopular.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("trending", "લોકપ્રિય વાર્તાઓ")
+            selectDrawerCategory(binding.navDrawer.menuDrawerPopular, "trending", "લોકપ્રિય વાર્તાઓ")
         }
 
         // Gallery & Videos
         binding.navDrawer.menuDrawerGallery.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("videos", "વીડિયો & ગેલેરી")
+            selectDrawerCategory(binding.navDrawer.menuDrawerGallery, "videos", "વીડિયો & ગેલેરી")
         }
 
         // Politics
         binding.navDrawer.menuDrawerPolitics.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("politics", "રાજકારણ")
+            selectDrawerCategory(binding.navDrawer.menuDrawerPolitics, "politics", "રાજકારણ")
         }
 
         // Fact Check
         binding.navDrawer.menuDrawerFactcheck.setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-            replaceFragment(homeFragment)
-            homeFragment.filterByCategory("factcheck", "ફેક્ટ ચેક")
+            selectDrawerCategory(binding.navDrawer.menuDrawerFactcheck, "factcheck", "ફેક્ટ ચેક")
         }
 
         // Saved Articles
@@ -175,10 +214,77 @@ class MainActivity : AppCompatActivity() {
             replaceFragment(savedArticlesFragment)
         }
 
-        // Settings / About: silently closes drawer, NO popups!
+        // Settings / Server Configuration
         binding.navDrawer.menuDrawerSettings.setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
+            showServerSettingsDialog()
         }
+    }
+
+    private fun showServerSettingsDialog() {
+        val servers = arrayOf(
+            "🏠 Local Wi-Fi PC (10.110.59.96:5000)",
+            "📱 Android Emulator (10.0.2.2:5000)",
+            "☁️ Cloud Production (gujaratpost.vercel.app)",
+            "✏️ Custom Server IP / URL"
+        )
+        val serverUrls = arrayOf(
+            com.gujaratpost.app.utils.Constants.LOCAL_WIFI_URL,
+            com.gujaratpost.app.utils.Constants.LOCAL_EMULATOR_URL,
+            com.gujaratpost.app.utils.Constants.CLOUD_PRODUCTION_URL,
+            ""
+        )
+
+        var selectedIndex = 0
+        val current = com.gujaratpost.app.data.api.RetrofitClient.activeApiBaseUrl
+        for (i in serverUrls.indices) {
+            if (serverUrls[i].isNotBlank() && current.contains(serverUrls[i].removeSuffix("/"))) {
+                selectedIndex = i
+                break
+            }
+        }
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("API સર્વર સેટિંગ્સ (Server Settings)")
+            .setSingleChoiceItems(servers, selectedIndex) { dialog, which ->
+                dialog.dismiss()
+                if (which == 3) {
+                    showCustomServerInputDialog()
+                } else {
+                    val chosen = serverUrls[which]
+                    com.gujaratpost.app.data.api.RetrofitClient.updateBaseUrl(chosen, this)
+                    android.widget.Toast.makeText(this, "સર્વર કનેક્ટ કર્યું: $chosen", android.widget.Toast.LENGTH_SHORT).show()
+                    homeFragment.reloadCurrentFeed()
+                }
+            }
+            .setNegativeButton("બંધ કરો (Close)", null)
+            .show()
+    }
+
+    private fun showCustomServerInputDialog() {
+        val input = android.widget.EditText(this).apply {
+            hint = "http://192.168.1.XX:5000/"
+            setText(com.gujaratpost.app.data.api.RetrofitClient.activeApiBaseUrl)
+            setSelection(text.length)
+        }
+        val container = android.widget.FrameLayout(this).apply {
+            setPadding(48, 24, 48, 24)
+            addView(input)
+        }
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("Custom Server URL")
+            .setView(container)
+            .setPositiveButton("સેવ કરો (Save)") { _, _ ->
+                val entered = input.text.toString().trim()
+                if (entered.isNotBlank()) {
+                    com.gujaratpost.app.data.api.RetrofitClient.updateBaseUrl(entered, this)
+                    android.widget.Toast.makeText(this, "સર્વર અપડેટ થયું: $entered", android.widget.Toast.LENGTH_SHORT).show()
+                    homeFragment.reloadCurrentFeed()
+                }
+            }
+            .setNegativeButton("રદ કરો (Cancel)", null)
+            .show()
     }
 
     private fun replaceFragment(fragment: Fragment) {

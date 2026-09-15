@@ -149,8 +149,9 @@ data class Article(
 
             return when {
                 raw.startsWith("http://") || raw.startsWith("https://") -> raw
-                raw.startsWith("/") -> "${Constants.WEB_BASE_URL}$raw"
-                else -> "${Constants.WEB_BASE_URL}/$raw"
+                raw.startsWith("/uploads") -> "${com.gujaratpost.app.data.api.RetrofitClient.activeApiBaseUrl.trimEnd('/')}$raw"
+                raw.startsWith("/") -> "${Constants.WEB_BASE_URL.trimEnd('/')}$raw"
+                else -> "${Constants.WEB_BASE_URL.trimEnd('/')}/$raw"
             }
         }
 }

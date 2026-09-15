@@ -32,15 +32,49 @@ class CategoryAdapter(
     override fun getItemCount(): Int = categoryList.size
 
     fun setSelectedPosition(position: Int) {
+        if (position < 0 || position >= categoryList.size) return
         val previous = selectedIndex
         selectedIndex = position
         notifyItemChanged(previous)
         notifyItemChanged(selectedIndex)
     }
 
-    fun updateCategories(newCategories: List<Category>) {
+    /**
+     * Programmatically selects the category matching the given slug and returns its index.
+     */
+    fun selectCategoryBySlug(slug: String?): Int {
+        val target = if (slug == null || slug == "all") "all" else slug.lowercase().trim()
+        val index = categoryList.indexOfFirst {
+            if (target == "all") {
+                it.slug.equals("all", ignoreCase = true) || it.id.equals("all", ignoreCase = true)
+            } else {
+                it.slug.equals(target, ignoreCase = true) ||
+                it.name.equals(target, ignoreCase = true) ||
+                it.nameGu.equals(target, ignoreCase = true) ||
+                (target == "gujarat" && (it.slug.contains("gujarat") || it.nameGu.contains("ગુજરાત")))
+            }
+        }
+        if (index >= 0) {
+            setSelectedPosition(index)
+            return index
+        }
+        return -1
+    }
+
+    fun updateCategories(newCategories: List<Category>, activeSlug: String? = null) {
         categoryList.clear()
         categoryList.addAll(newCategories)
+        val target = if (activeSlug == null || activeSlug == "all") "all" else activeSlug.lowercase().trim()
+        selectedIndex = categoryList.indexOfFirst {
+            if (target == "all") {
+                it.slug.equals("all", ignoreCase = true) || it.id.equals("all", ignoreCase = true)
+            } else {
+                it.slug.equals(target, ignoreCase = true) ||
+                it.name.equals(target, ignoreCase = true) ||
+                it.nameGu.equals(target, ignoreCase = true) ||
+                (target == "gujarat" && (it.slug.contains("gujarat") || it.nameGu.contains("ગુજરાત")))
+            }
+        }.coerceAtLeast(0)
         notifyDataSetChanged()
     }
 
@@ -50,22 +84,26 @@ class CategoryAdapter(
 
         fun bind(position: Int) {
             val item = categoryList[position]
-            binding.tvCategoryName.text = item.displayName.uppercase()
+            binding.tvCategoryName.text = item.displayName
 
             val isSelected = position == selectedIndex
 
             if (isSelected) {
-                binding.tvCategoryName.setTextColor(Color.WHITE)
+                // RED active text and RED indicator bar
+                binding.tvCategoryName.setTextColor(Color.parseColor("#E53935"))
                 binding.viewIndicator.visibility = View.VISIBLE
+                binding.viewIndicator.setBackgroundColor(Color.parseColor("#E53935"))
             } else {
-                binding.tvCategoryName.setTextColor(Color.parseColor("#B0BEC5"))
+                // Subtle white-grey inactive text
+                binding.tvCategoryName.setTextColor(Color.parseColor("#CCCCCC"))
                 binding.viewIndicator.visibility = View.GONE
             }
 
             binding.root.setOnClickListener {
-                setSelectedPosition(adapterPosition)
-                // If "All" (first item), pass null slug to load all articles
-                if (adapterPosition == 0) {
+                val pos = adapterPosition
+                if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
+                setSelectedPosition(pos)
+                if (pos == 0 || item.slug == "all") {
                     onCategorySelected(null)
                 } else {
                     onCategorySelected(item)
@@ -74,3 +112,4 @@ class CategoryAdapter(
         }
     }
 }
+

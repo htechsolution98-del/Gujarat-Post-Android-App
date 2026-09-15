@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 class ArticleDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityArticleDetailBinding
+    private lateinit var pagerAdapter: ArticlePagerAdapter
     private var articlesList: List<Article> = emptyList()
     private var currentIndex: Int = 0
 
@@ -55,8 +56,8 @@ class ArticleDetailActivity : AppCompatActivity() {
     }
 
     private fun setupViewPager(startPos: Int) {
-        val adapter = ArticlePagerAdapter(articlesList)
-        binding.viewPagerArticles.adapter = adapter
+        pagerAdapter = ArticlePagerAdapter(articlesList)
+        binding.viewPagerArticles.adapter = pagerAdapter
         binding.viewPagerArticles.offscreenPageLimit = 1
         binding.viewPagerArticles.clipChildren = false
         binding.viewPagerArticles.clipToPadding = false
@@ -135,16 +136,19 @@ class ArticleDetailActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Call API with the fixed ArticleDetailResponseData wrapper
+                // Call API with the ArticleDetailResponseData wrapper
                 val response = RetrofitClient.apiService.getArticleDetail(slugOrId)
                 if (response.isSuccessful && response.body()?.success == true) {
                     val fullArticle = response.body()?.data?.article
-                    if (fullArticle != null && fullArticle.content != null && fullArticle.content != article.content) {
-                        // In-memory update if content has extra rich HTML from backend
+                    if (fullArticle != null) {
                         val updatedList = articlesList.toMutableList()
-                        updatedList[position] = fullArticle
-                        articlesList = updatedList
-                        binding.viewPagerArticles.adapter?.notifyItemChanged(position)
+                        if (position in 0 until updatedList.size) {
+                            updatedList[position] = fullArticle
+                            articlesList = updatedList
+                        }
+                        if (::pagerAdapter.isInitialized) {
+                            pagerAdapter.updateArticleAt(position, fullArticle)
+                        }
                     }
                 }
             } catch (e: Exception) {
