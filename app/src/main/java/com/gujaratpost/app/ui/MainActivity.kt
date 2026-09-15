@@ -9,6 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.gujaratpost.app.R
 import com.gujaratpost.app.databinding.ActivityMainBinding
 import com.gujaratpost.app.ui.category.CategoryFragment
