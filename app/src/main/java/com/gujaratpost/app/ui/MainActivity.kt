@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
                 val q = s?.toString()?.trim().orEmpty()
                 searchDebounceJob?.cancel()
                 if (q.length >= 2) {
-                    searchDebounceJob = androidx.lifecycle.lifecycleScope.launch {
+                    searchDebounceJob = this@MainActivity.lifecycleScope.launch {
                         kotlinx.coroutines.delay(450)
                         if (binding.layoutSearchInline.visibility == View.VISIBLE) {
                             replaceFragment(homeFragment)
