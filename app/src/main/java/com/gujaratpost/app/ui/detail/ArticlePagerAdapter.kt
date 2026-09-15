@@ -51,23 +51,59 @@ class ArticlePagerAdapter(
             binding.tvPageTitle.text = article.displayTitle
             binding.tvPageCategory.text = article.categoryName
 
+            // Location
+            val loc = article.location?.trim().orEmpty()
+            if (loc.isNotBlank()) {
+                binding.tvPageLocation.visibility = View.VISIBLE
+                binding.tvPageLocation.text = "📍 $loc"
+            } else {
+                binding.tvPageLocation.visibility = View.GONE
+            }
+
+            // Reading time
+            val rTime = article.readingTime ?: 3
+            binding.tvPageReadingTime.visibility = View.VISIBLE
+            binding.tvPageReadingTime.text = "⏱️ $rTime મિનિટ"
+
             val dateStr = DateFormatter.formatIsoDate(article.publishedAt ?: article.createdAt)
             binding.tvPageDate.text = dateStr
 
             val viewCount = if (article.views > 0) article.views else article.viewCount
             binding.tvPageViews.text = if (viewCount > 0) "👁️ $viewCount" else ""
 
-            val authorName = article.author?.displayName ?: "ગુજરાત પોસ્ટ બ્યુરો"
+            // Author Profile
+            val author = article.author
+            val authorName = author?.displayName ?: "ગુજરાત પોસ્ટ બ્યુરો"
             binding.tvPageAuthor.text = "રિપોર્ટ: $authorName"
 
-            // Lead excerpt
+            val role = author?.displayDesignation?.trim().orEmpty()
+            if (role.isNotBlank()) {
+                binding.tvPageAuthorRole.visibility = View.VISIBLE
+                binding.tvPageAuthorRole.text = role
+            } else {
+                binding.tvPageAuthorRole.visibility = View.GONE
+            }
+
+            val authorImgUrl = author?.image?.trim().orEmpty()
+            if (authorImgUrl.isNotBlank()) {
+                Glide.with(context)
+                    .load(authorImgUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_author_default)
+                    .error(R.drawable.ic_author_default)
+                    .into(binding.ivPageAuthorAvatar)
+            } else {
+                binding.ivPageAuthorAvatar.setImageResource(R.drawable.ic_author_default)
+            }
+
+            // Lead excerpt callout
             val excerpt = article.displayExcerpt.trim()
             val rawContent = article.displayContent.trim()
             if (excerpt.isNotBlank() && excerpt != rawContent && excerpt != article.displayTitle.trim()) {
-                binding.tvPageExcerpt.visibility = View.VISIBLE
+                binding.layoutPageExcerpt.visibility = View.VISIBLE
                 binding.tvPageExcerpt.text = excerpt
             } else {
-                binding.tvPageExcerpt.visibility = View.GONE
+                binding.layoutPageExcerpt.visibility = View.GONE
             }
 
             // Full formatted body content (HTML or clean plain text paragraphs)
@@ -87,6 +123,33 @@ class ArticlePagerAdapter(
                 rawContent
             }
             binding.tvPageContent.text = formatted
+
+            // Tags Chips
+            val tagsList = (if (article.tagsGu.isNotEmpty()) article.tagsGu else article.tags)
+                .filter { it.isNotBlank() }
+            if (tagsList.isNotEmpty()) {
+                binding.layoutPageTags.visibility = View.VISIBLE
+                binding.containerTagChips.removeAllViews()
+                for (t in tagsList) {
+                    val chip = android.widget.TextView(context).apply {
+                        text = if (t.startsWith("#")) t else "#$t"
+                        setBackgroundResource(R.drawable.bg_chip_tag)
+                        setPadding(24, 12, 24, 12)
+                        setTextColor(android.graphics.Color.parseColor("#334155"))
+                        textSize = 12f
+                        val lp = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            setMargins(0, 0, 16, 0)
+                        }
+                        layoutParams = lp
+                    }
+                    binding.containerTagChips.addView(chip)
+                }
+            } else {
+                binding.layoutPageTags.visibility = View.GONE
+            }
 
             // Cover Image
             val imageUrl = article.resolvedImageUrl

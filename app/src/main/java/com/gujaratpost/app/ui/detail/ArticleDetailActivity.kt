@@ -145,6 +145,7 @@ class ArticleDetailActivity : AppCompatActivity() {
                         if (position in 0 until updatedList.size) {
                             updatedList[position] = fullArticle
                             articlesList = updatedList
+                            ArticleRepository.currentArticles = updatedList
                         }
                         if (::pagerAdapter.isInitialized) {
                             pagerAdapter.updateArticleAt(position, fullArticle)

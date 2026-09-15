@@ -59,6 +59,25 @@ class MainActivity : AppCompatActivity() {
             executeSearch()
         }
 
+        var searchDebounceJob: kotlinx.coroutines.Job? = null
+        binding.etInlineSearch.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val q = s?.toString()?.trim().orEmpty()
+                searchDebounceJob?.cancel()
+                if (q.length >= 2) {
+                    searchDebounceJob = androidx.lifecycle.lifecycleScope.launch {
+                        kotlinx.coroutines.delay(450)
+                        if (binding.layoutSearchInline.visibility == View.VISIBLE) {
+                            replaceFragment(homeFragment)
+                            homeFragment.searchArticles(q)
+                        }
+                    }
+                }
+            }
+        })
+
         binding.etInlineSearch.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                 executeSearch()
@@ -99,7 +118,7 @@ class MainActivity : AppCompatActivity() {
 
         if (query.isNotBlank()) {
             replaceFragment(homeFragment)
-            homeFragment.filterByCategory(null, "શોધ: $query")
+            homeFragment.searchArticles(query)
         }
     }
 

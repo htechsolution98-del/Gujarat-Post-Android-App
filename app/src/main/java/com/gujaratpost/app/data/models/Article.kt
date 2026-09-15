@@ -26,6 +26,9 @@ data class Author(
 ) : Serializable {
     val displayName: String
         get() = nameGu?.takeIf { it.isNotBlank() } ?: name ?: "ગુજરાત પોસ્ટ બ્યુરો"
+
+    val displayDesignation: String?
+        get() = designationGu?.takeIf { it.isNotBlank() } ?: designation
 }
 
 data class Article(
@@ -112,7 +115,13 @@ data class Article(
     val updatedAt: String? = null,
 
     @SerializedName("author")
-    val author: Author? = null
+    val author: Author? = null,
+
+    @SerializedName("tags")
+    val tags: List<String> = emptyList(),
+
+    @SerializedName("tagsGu")
+    val tagsGu: List<String> = emptyList()
 ) : Serializable {
     /**
      * Resolves the article headline in Gujarati if available, else standard title.

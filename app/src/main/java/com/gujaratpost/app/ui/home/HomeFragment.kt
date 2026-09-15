@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +22,9 @@ import com.gujaratpost.app.ui.detail.ArticleDetailActivity
 import com.gujaratpost.app.utils.Constants
 import com.gujaratpost.app.utils.DateFormatter
 import com.gujaratpost.app.utils.NewsCacheManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -33,6 +37,17 @@ class HomeFragment : Fragment() {
     private var selectedCategorySlug: String? = null
     private var currentHeroArticle: Article? = null
     private var currentFeedArticles: List<Article> = emptyList()
+
+    // Pagination & Search state
+    private var currentPage: Int = 1
+    private var isLoadingMore: Boolean = false
+    private var hasMorePages: Boolean = true
+    private var currentSearchQuery: String? = null
+
+    // Breaking news rotator state
+    private var breakingArticles: List<Article> = emptyList()
+    private var currentBreakingIndex: Int = 0
+    private var breakingRotatorJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,14 +64,15 @@ class HomeFragment : Fragment() {
         // 0. Restore saved server preferences if any
         RetrofitClient.initFromPreferences(requireContext())
 
-        // 1. Initialize category bar immediately with defaults so it never flashes empty
+        // 1. Initialize category bar immediately with defaults
         setupCategoriesBar()
 
-        // 2. Initialize article feed
+        // 2. Initialize article feed & infinite scroll
         setupRecyclerView()
         setupSwipeRefresh()
+        setupInfiniteScroll()
 
-        // 3. Instant offline cache load (zero-wait display)
+        // 3. Instant offline cache load
         loadCachedData()
 
         // 4. Fresh live network fetch
@@ -120,6 +136,19 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun setupInfiniteScroll() {
+        binding.nestedScrollView.setOnScrollChangeListener(
+            NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, _ ->
+                if (v.getChildAt(0) != null) {
+                    val diff = v.getChildAt(0).bottom - (v.height + scrollY)
+                    if (diff <= 500) {
+                        loadNextPage()
+                    }
+                }
+            }
+        )
+    }
+
     private fun loadCachedData() {
         try {
             val cached = NewsCacheManager.getCachedArticles(requireContext())
@@ -141,47 +170,78 @@ class HomeFragment : Fragment() {
     }
 
     fun filterByCategory(categorySlug: String?, categoryName: String? = null) {
+        currentSearchQuery = null
         val targetSlug = if (categorySlug.isNullOrBlank() || categorySlug == "all") null else categorySlug
         selectedCategorySlug = targetSlug
+        currentPage = 1
+        hasMorePages = true
+        binding.tvNoMoreArticles.visibility = View.GONE
+
         if (_binding != null) {
             val lookupSlug = categorySlug ?: "all"
 
-            // 1. Programmatically highlight chip in horizontal category bar and scroll to it
             val pos = categoryAdapter.selectCategoryBySlug(lookupSlug)
             if (pos >= 0) {
                 binding.rvCategories.smoothScrollToPosition(pos)
             }
 
-            // 2. Keep MainActivity drawer highlight in sync
             (activity as? com.gujaratpost.app.ui.MainActivity)?.highlightDrawerCategoryBySlug(lookupSlug)
 
-            // 3. Update section title
             binding.tvSectionHeader.text = if (!categoryName.isNullOrBlank() && lookupSlug != "all") {
                 "$categoryName સમાચાર"
             } else {
                 getString(R.string.latest_news_title)
             }
 
-            // 4. Fetch filtered articles
             binding.progressLoading.visibility = View.VISIBLE
             binding.layoutError.visibility = View.GONE
             lifecycleScope.launch {
-                fetchArticles(selectedCategorySlug)
+                fetchArticles(selectedCategorySlug, page = 1, isAppend = false)
                 binding.progressLoading.visibility = View.GONE
                 binding.swipeRefresh.isRefreshing = false
             }
         }
     }
 
+    fun searchArticles(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) {
+            filterByCategory("all", "બધા")
+            return
+        }
+
+        currentSearchQuery = trimmed
+        selectedCategorySlug = null
+        currentPage = 1
+        hasMorePages = true
+        binding.cardHeroFeatured.visibility = View.GONE
+        currentHeroArticle = null
+        binding.tvNoMoreArticles.visibility = View.GONE
+
+        binding.tvSectionHeader.visibility = View.VISIBLE
+        binding.tvSectionHeader.text = "શોધ પરિણામ: \"$trimmed\""
+
+        binding.progressLoading.visibility = View.VISIBLE
+        binding.layoutError.visibility = View.GONE
+
+        lifecycleScope.launch {
+            fetchArticles(null, page = 1, isAppend = false, query = trimmed)
+            binding.progressLoading.visibility = View.GONE
+            binding.swipeRefresh.isRefreshing = false
+        }
+    }
+
     private fun loadData(isPullToRefresh: Boolean) {
-        // Only show spinner if there is no content already on screen
         if (!isPullToRefresh && articleAdapter.itemCount == 0 && currentHeroArticle == null) {
             binding.progressLoading.visibility = View.VISIBLE
         }
 
-        // Independent non-blocking coroutines: articles are prioritized!
+        currentPage = 1
+        hasMorePages = true
+        binding.tvNoMoreArticles.visibility = View.GONE
+
         lifecycleScope.launch {
-            fetchArticles(selectedCategorySlug)
+            fetchArticles(selectedCategorySlug, page = 1, isAppend = false, query = currentSearchQuery)
             binding.progressLoading.visibility = View.GONE
             binding.swipeRefresh.isRefreshing = false
         }
@@ -192,6 +252,22 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.launch {
             fetchBreakingNews()
+        }
+    }
+
+    private fun loadNextPage() {
+        if (isLoadingMore || !hasMorePages || binding.progressLoading.visibility == View.VISIBLE) {
+            return
+        }
+
+        isLoadingMore = true
+        binding.progressPagination.visibility = View.VISIBLE
+
+        val nextPage = currentPage + 1
+        lifecycleScope.launch {
+            fetchArticles(selectedCategorySlug, page = nextPage, isAppend = true, query = currentSearchQuery)
+            binding.progressPagination.visibility = View.GONE
+            isLoadingMore = false
         }
     }
 
@@ -219,17 +295,12 @@ class HomeFragment : Fragment() {
 
     private suspend fun fetchBreakingNews() {
         try {
-            val response = RetrofitClient.apiService.getBreakingArticles(isBreaking = true, limit = 5)
+            val response = RetrofitClient.apiService.getBreakingArticles(isBreaking = true, limit = 6)
             if (response.isSuccessful && response.body()?.success == true) {
                 val breaking = response.body()?.data?.articles.orEmpty()
                 if (breaking.isNotEmpty()) {
-                    val first = breaking[0]
-                    binding.cardBreakingNews.visibility = View.VISIBLE
-                    binding.tvBreakingNewsTitle.text = first.displayTitle
-                    binding.tvBreakingNewsTitle.isSelected = true // Start marquee
-                    binding.cardBreakingNews.setOnClickListener {
-                        openArticleDetail(first)
-                    }
+                    breakingArticles = breaking
+                    startBreakingRotator()
                 } else {
                     binding.cardBreakingNews.visibility = View.GONE
                 }
@@ -239,88 +310,141 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private suspend fun fetchArticles(categorySlug: String?) {
+    private fun startBreakingRotator() {
+        breakingRotatorJob?.cancel()
+        if (breakingArticles.isEmpty() || _binding == null) return
+
+        binding.cardBreakingNews.visibility = View.VISIBLE
+        binding.tvBreakingCounter.visibility = if (breakingArticles.size > 1) View.VISIBLE else View.GONE
+
+        breakingRotatorJob = lifecycleScope.launch {
+            while (isActive && breakingArticles.isNotEmpty()) {
+                val current = breakingArticles[currentBreakingIndex.coerceIn(0, breakingArticles.size - 1)]
+                binding.tvBreakingNewsTitle.text = current.displayTitle
+                binding.tvBreakingNewsTitle.isSelected = true
+                binding.tvBreakingCounter.text = "${currentBreakingIndex + 1}/${breakingArticles.size}"
+
+                binding.cardBreakingNews.setOnClickListener {
+                    openArticleDetail(current)
+                }
+
+                delay(4500)
+                currentBreakingIndex = (currentBreakingIndex + 1) % breakingArticles.size
+            }
+        }
+    }
+
+    private suspend fun fetchArticles(
+        categorySlug: String?,
+        page: Int,
+        isAppend: Boolean,
+        query: String? = null
+    ) {
         try {
             val response = RetrofitClient.apiService.getArticles(
-                page = 1,
-                limit = 30,
+                page = page,
+                limit = 20,
                 categorySlug = if (categorySlug == "all") null else categorySlug,
+                query = query,
                 sort = "latest"
             )
 
             if (response.isSuccessful && response.body()?.success == true) {
-                val articles = response.body()?.data?.articles.orEmpty()
+                val newArticles = response.body()?.data?.articles.orEmpty()
 
-                if (articles.isNotEmpty()) {
-                    binding.layoutError.visibility = View.GONE
-                    binding.tvSectionHeader.visibility = View.VISIBLE
-
-                    // Save to local cache for instant offline loading on next app start
-                    if (categorySlug == null || categorySlug == "all") {
-                        context?.let { ctx ->
-                            NewsCacheManager.saveCachedArticles(ctx, articles)
+                if (isAppend) {
+                    if (newArticles.isNotEmpty()) {
+                        currentPage = page
+                        val updatedFeed = currentFeedArticles.toMutableList().apply {
+                            addAll(newArticles)
                         }
-                    }
-
-                    // First article becomes the Hero Featured card
-                    val heroArticle = articles[0]
-                    currentHeroArticle = heroArticle
-                    setupHeroFeaturedCard(heroArticle)
-
-                    // Remaining articles go into the feed
-                    val feedArticles: List<Article> = if (articles.size > 1) articles.subList(1, articles.size) else emptyList()
-                    currentFeedArticles = feedArticles
-                    articleAdapter.submitList(feedArticles)
-                } else {
-                    currentHeroArticle = null
-                    binding.cardHeroFeatured.visibility = View.GONE
-                    currentFeedArticles = emptyList()
-                    articleAdapter.submitList(emptyList())
-                    binding.tvSectionHeader.visibility = View.GONE
-                    binding.layoutError.visibility = View.VISIBLE
-                    binding.tvErrorMessage.text = if (categorySlug != null && categorySlug != "all") {
-                        "આ કૅટેગરીમાં હાલ કોઈ સમાચાર નથી."
+                        currentFeedArticles = updatedFeed
+                        articleAdapter.submitList(updatedFeed)
+                        updateRepositoryArticles()
                     } else {
-                        getString(R.string.no_articles_found)
+                        hasMorePages = false
+                        binding.tvNoMoreArticles.visibility = View.VISIBLE
+                    }
+                } else {
+                    // Fresh page 1
+                    currentPage = 1
+                    if (newArticles.isNotEmpty()) {
+                        binding.layoutError.visibility = View.GONE
+                        binding.tvSectionHeader.visibility = View.VISIBLE
+
+                        if (query.isNullOrBlank() && (categorySlug == null || categorySlug == "all")) {
+                            context?.let { ctx ->
+                                NewsCacheManager.saveCachedArticles(ctx, newArticles)
+                            }
+                        }
+
+                        if (query.isNullOrBlank()) {
+                            val heroArticle = newArticles[0]
+                            currentHeroArticle = heroArticle
+                            setupHeroFeaturedCard(heroArticle)
+                            val feedArticles = if (newArticles.size > 1) newArticles.subList(1, newArticles.size) else emptyList()
+                            currentFeedArticles = feedArticles
+                            articleAdapter.submitList(feedArticles)
+                        } else {
+                            currentHeroArticle = null
+                            binding.cardHeroFeatured.visibility = View.GONE
+                            currentFeedArticles = newArticles
+                            articleAdapter.submitList(newArticles)
+                            binding.tvSectionHeader.text = "શોધ પરિણામો: \"$query\" (${newArticles.size} સમાચાર)"
+                        }
+                        updateRepositoryArticles()
+                    } else {
+                        currentHeroArticle = null
+                        binding.cardHeroFeatured.visibility = View.GONE
+                        currentFeedArticles = emptyList()
+                        articleAdapter.submitList(emptyList())
+                        binding.tvSectionHeader.visibility = View.VISIBLE
+                        binding.layoutError.visibility = View.VISIBLE
+                        binding.tvErrorMessage.text = if (!query.isNullOrBlank()) {
+                            "\"$query\" માટે કોઈ સમાચાર મળ્યા નથી."
+                        } else if (categorySlug != null && categorySlug != "all") {
+                            "આ કૅટેગરીમાં હાલ કોઈ સમાચાર નથી."
+                        } else {
+                            getString(R.string.no_articles_found)
+                        }
                     }
                 }
             } else {
-                if (categorySlug == null || categorySlug == "all") {
-                    val fallback = context?.let { NewsCacheManager.getCachedArticles(it) }.orEmpty()
-                    if (fallback.isNotEmpty()) {
-                        setupFallbackFeed(fallback)
-                    } else {
-                        binding.layoutError.visibility = View.VISIBLE
-                        binding.tvErrorMessage.text = "સમાચાર લોડ કરી શકાયા નથી. કૃપા કરીને ફરી પ્રયાસ કરો."
-                    }
-                } else {
-                    currentHeroArticle = null
-                    binding.cardHeroFeatured.visibility = View.GONE
-                    currentFeedArticles = emptyList()
-                    articleAdapter.submitList(emptyList())
-                    binding.tvSectionHeader.visibility = View.GONE
-                    binding.layoutError.visibility = View.VISIBLE
-                    binding.tvErrorMessage.text = "આ કૅટેગરીના સમાચાર મેળવી શકાયા નથી."
+                if (!isAppend) {
+                    handleInitialLoadError(categorySlug)
                 }
             }
         } catch (e: Exception) {
-            if (categorySlug == null || categorySlug == "all") {
-                val fallback = context?.let { NewsCacheManager.getCachedArticles(it) }.orEmpty()
-                if (fallback.isNotEmpty()) {
-                    setupFallbackFeed(fallback)
-                } else {
-                    binding.layoutError.visibility = View.VISIBLE
-                    binding.tvErrorMessage.text = "ઇન્ટરનેટ કનેક્શન ધીમું છે. કૃપા કરીને ફરી પ્રયાસ કરો."
-                }
-            } else {
-                currentHeroArticle = null
-                binding.cardHeroFeatured.visibility = View.GONE
-                currentFeedArticles = emptyList()
-                articleAdapter.submitList(emptyList())
-                binding.tvSectionHeader.visibility = View.GONE
-                binding.layoutError.visibility = View.VISIBLE
-                binding.tvErrorMessage.text = "ઇન્ટરનેટ કનેક્શન ધીમું છે. કૃપા કરીને ફરી પ્રયાસ કરો."
+            if (!isAppend) {
+                handleInitialLoadError(categorySlug)
             }
+        }
+    }
+
+    private fun updateRepositoryArticles() {
+        val allArticles = mutableListOf<Article>()
+        currentHeroArticle?.let { allArticles.add(it) }
+        allArticles.addAll(currentFeedArticles)
+        ArticleRepository.currentArticles = allArticles
+    }
+
+    private fun handleInitialLoadError(categorySlug: String?) {
+        if (categorySlug == null || categorySlug == "all") {
+            val fallback = context?.let { NewsCacheManager.getCachedArticles(it) }.orEmpty()
+            if (fallback.isNotEmpty()) {
+                setupFallbackFeed(fallback)
+            } else {
+                binding.layoutError.visibility = View.VISIBLE
+                binding.tvErrorMessage.text = "સમાચાર લોડ કરી શકાયા નથી. કૃપા કરીને ફરી પ્રયાસ કરો."
+            }
+        } else {
+            currentHeroArticle = null
+            binding.cardHeroFeatured.visibility = View.GONE
+            currentFeedArticles = emptyList()
+            articleAdapter.submitList(emptyList())
+            binding.tvSectionHeader.visibility = View.GONE
+            binding.layoutError.visibility = View.VISIBLE
+            binding.tvErrorMessage.text = "આ કૅટેગરીના સમાચાર મેળવી શકાયા નથી."
         }
     }
 
@@ -335,6 +459,7 @@ class HomeFragment : Fragment() {
             val feed = if (fallback.size > 1) fallback.subList(1, fallback.size) else emptyList()
             currentFeedArticles = feed
             articleAdapter.submitList(feed)
+            updateRepositoryArticles()
         }
     }
 
@@ -364,16 +489,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun openArticleDetail(article: Article) {
-        // Collect full active articles list for horizontal swiping
-        val allArticles = mutableListOf<Article>()
-        currentHeroArticle?.let { allArticles.add(it) }
-        allArticles.addAll(currentFeedArticles)
-
-        if (allArticles.isEmpty()) {
-            allArticles.add(article)
-        }
-
-        ArticleRepository.currentArticles = allArticles
+        updateRepositoryArticles()
+        val allArticles = ArticleRepository.currentArticles
         ArticleRepository.currentPosition = allArticles.indexOfFirst { it.id == article.id }.coerceAtLeast(0)
 
         val intent = Intent(requireContext(), ArticleDetailActivity::class.java).apply {
@@ -387,6 +504,7 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        breakingRotatorJob?.cancel()
         _binding = null
     }
 }

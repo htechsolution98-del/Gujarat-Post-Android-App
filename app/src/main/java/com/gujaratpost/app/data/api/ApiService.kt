@@ -19,6 +19,7 @@ interface ApiService {
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
         @Query("categorySlug") categorySlug: String? = null,
+        @Query("query") query: String? = null,
         @Query("isTrending") isTrending: Boolean? = null,
         @Query("isBreaking") isBreaking: Boolean? = null,
         @Query("sort") sort: String? = "latest"
