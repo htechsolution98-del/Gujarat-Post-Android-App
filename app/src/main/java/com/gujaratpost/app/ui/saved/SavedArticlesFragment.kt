@@ -40,6 +40,9 @@ class SavedArticlesFragment : Fragment() {
 
             val intent = Intent(requireContext(), ArticleDetailActivity::class.java).apply {
                 putExtra("EXTRA_ARTICLE_POSITION", ArticleRepository.currentPosition)
+                putExtra(Constants.EXTRA_ARTICLE_ID, article.safeId)
+                putExtra(Constants.EXTRA_ARTICLE_SLUG, article.safeSlug)
+                putExtra(Constants.EXTRA_ARTICLE_TITLE, article.displayTitle)
             }
             startActivity(intent)
         }
