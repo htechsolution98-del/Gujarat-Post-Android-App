@@ -94,6 +94,8 @@ class NewspaperPageTransformer : ViewPager2.PageTransformer {
                 view.translationX = 0f
                 view.rotationY = 0f
             }
-        } catch (_: Throwable) {}
+        }
+    } catch (e: Throwable) {
+        // Safe fallback
     }
 }

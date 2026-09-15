@@ -171,7 +171,7 @@ class ArticlePagerAdapter(
                 try {
                     binding.tvPageTitle.text = article.displayTitle
                     binding.tvPageContent.text = article.displayContent
-                } catch (_: Throwable) {}
+                } catch (e2: Throwable) {}
             }
         }
     }
