@@ -38,4 +38,5 @@
     <string name="article_saved_toast">સમાચાર બુકમાર્ક્સમાં સેવ કર્યા</string>
     <string name="article_unsaved_toast">સમાચાર બુકમાર્ક્સમાંથી હટાવ્યા</string>
     <string name="no_saved_articles">તમે હજુ સુધી કોઈ સમાચાર સેવ કર્યા નથી.</string>
+    <string name="author">લેખક</string>
 </resources>
