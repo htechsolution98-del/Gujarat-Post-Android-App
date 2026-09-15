@@ -23,7 +23,13 @@ class ArticlePagerAdapter(
     fun updateArticleAt(position: Int, fullArticle: Article) {
         if (position in 0 until articles.size) {
             articles[position] = fullArticle
-            notifyItemChanged(position)
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                try {
+                    notifyItemChanged(position)
+                } catch (e: Throwable) {
+                    android.util.Log.e("ArticlePagerAdapter", "Failed to notify item changed", e)
+                }
+            }
         }
     }
 

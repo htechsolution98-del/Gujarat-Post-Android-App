@@ -55,7 +55,6 @@ class ArticleDetailActivity : AppCompatActivity() {
             setupActions()
         } catch (e: Throwable) {
             android.util.Log.e("ArticleDetailActivity", "Error in onCreate", e)
-            finish()
         }
     }
 
@@ -68,14 +67,6 @@ class ArticleDetailActivity : AppCompatActivity() {
     private fun setupViewPager(startPos: Int) {
         pagerAdapter = ArticlePagerAdapter(articlesList)
         binding.viewPagerArticles.adapter = pagerAdapter
-        binding.viewPagerArticles.offscreenPageLimit = 1
-        binding.viewPagerArticles.clipChildren = false
-        binding.viewPagerArticles.clipToPadding = false
-        (binding.viewPagerArticles.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView)?.apply {
-            clipChildren = false
-            clipToPadding = false
-        }
-        binding.viewPagerArticles.setPageTransformer(NewspaperPageTransformer())
         binding.viewPagerArticles.setCurrentItem(startPos, false)
         currentIndex = startPos
 

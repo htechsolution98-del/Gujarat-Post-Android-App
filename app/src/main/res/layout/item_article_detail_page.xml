@@ -17,7 +17,6 @@
             android:id="@+id/iv_page_image"
             android:layout_width="match_parent"
             android:layout_height="250dp"
-            android:adjustViewBounds="true"
             android:contentDescription="@string/app_name"
             android:scaleType="centerCrop" />
 

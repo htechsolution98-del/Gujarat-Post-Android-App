@@ -91,8 +91,19 @@ object RetrofitClient {
         throw lastException ?: IOException("All server endpoints failed")
     }
 
+    private val headersInterceptor = Interceptor { chain ->
+        val original = chain.request()
+        val requestWithHeaders = original.newBuilder()
+            .header("Bypass-Tunnel-Reminder", "true")
+            .header("bypass-tunnel-reminder", "true")
+            .header("User-Agent", "GujaratPost-Android/1.0.2")
+            .build()
+        chain.proceed(requestWithHeaders)
+    }
+
     private val okHttpClient by lazy {
         val builder = OkHttpClient.Builder()
+            .addInterceptor(headersInterceptor)
             .addInterceptor(failoverInterceptor)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(6, TimeUnit.SECONDS)
