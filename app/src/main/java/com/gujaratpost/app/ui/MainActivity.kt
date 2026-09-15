@@ -246,12 +246,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun showServerSettingsDialog() {
         val servers = arrayOf(
-            "🏠 Local Wi-Fi PC (10.110.59.96:5000)",
+            "⚡ Live Online Server (4G/5G & Wi-Fi)",
+            "🏠 Local Wi-Fi (192.168.1.16:5000)",
             "📱 Android Emulator (10.0.2.2:5000)",
             "☁️ Cloud Production (gujaratpost.vercel.app)",
             "✏️ Custom Server IP / URL"
         )
         val serverUrls = arrayOf(
+            com.gujaratpost.app.utils.Constants.TUNNEL_LIVE_URL,
             com.gujaratpost.app.utils.Constants.LOCAL_WIFI_URL,
             com.gujaratpost.app.utils.Constants.LOCAL_EMULATOR_URL,
             com.gujaratpost.app.utils.Constants.CLOUD_PRODUCTION_URL,

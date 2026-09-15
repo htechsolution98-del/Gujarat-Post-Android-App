@@ -5,6 +5,8 @@ object Constants {
     const val TUNNEL_LIVE_URL = "https://gujaratpost-news-api.loca.lt/"
     const val LOCAL_WIFI_URL = "http://192.168.1.16:5000/"
     const val LOCAL_FRONTEND_URL = "http://192.168.1.16:3000/"
+    const val LOCAL_EMULATOR_URL = "http://10.0.2.2:5000/"
+    const val PREV_WIFI_URL = "http://10.110.59.96:5000/"
     const val CLOUD_PRODUCTION_URL = "https://gujaratpost.vercel.app/"
 
     // Primary default URL: Live tunnel for guaranteed connectivity everywhere
