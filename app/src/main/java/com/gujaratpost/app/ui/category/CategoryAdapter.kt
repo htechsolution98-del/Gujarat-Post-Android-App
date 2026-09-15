@@ -51,7 +51,7 @@ class CategoryAdapter(
                 it.slug.equals(target, ignoreCase = true) ||
                 it.name.equals(target, ignoreCase = true) ||
                 it.nameGu.equals(target, ignoreCase = true) ||
-                (target == "gujarat" && (it.slug.contains("gujarat") || it.nameGu.contains("ગુજરાત")))
+                (target == "gujarat" && (it.slug?.contains("gujarat", ignoreCase = true) == true || it.nameGu?.contains("ગુજરાત") == true))
             }
         }
         if (index >= 0) {
@@ -72,7 +72,7 @@ class CategoryAdapter(
                 it.slug.equals(target, ignoreCase = true) ||
                 it.name.equals(target, ignoreCase = true) ||
                 it.nameGu.equals(target, ignoreCase = true) ||
-                (target == "gujarat" && (it.slug.contains("gujarat") || it.nameGu.contains("ગુજરાત")))
+                (target == "gujarat" && (it.slug?.contains("gujarat", ignoreCase = true) == true || it.nameGu?.contains("ગુજરાત") == true))
             }
         }.coerceAtLeast(0)
         notifyDataSetChanged()
