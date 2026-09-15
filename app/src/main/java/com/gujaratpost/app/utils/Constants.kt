@@ -2,18 +2,20 @@ package com.gujaratpost.app.utils
 
 object Constants {
     // Current primary development server IP (User's active Wi-Fi LAN IP)
-    const val LOCAL_WIFI_URL = "http://10.110.59.96:5000/"
+    const val LOCAL_WIFI_URL = "http://192.168.1.16:5000/"
+    const val PREV_WIFI_URL = "http://10.110.59.96:5000/"
     const val LOCAL_EMULATOR_URL = "http://10.0.2.2:5000/"
     const val LOCALHOST_URL = "http://127.0.0.1:5000/"
     const val CLOUD_PRODUCTION_URL = "https://gujaratpost.vercel.app/"
 
-    // Default primary endpoint: Try Wi-Fi backend first for immediate local testing
+    // Default primary endpoint: Try current Wi-Fi backend first for immediate local testing
     const val DEFAULT_BASE_URL = LOCAL_WIFI_URL
     const val WEB_BASE_URL = CLOUD_PRODUCTION_URL
 
     // Ordered list of candidate backend URLs for automatic failover discovery
     val CANDIDATE_BASE_URLS = listOf(
         LOCAL_WIFI_URL,
+        PREV_WIFI_URL,
         LOCAL_EMULATOR_URL,
         CLOUD_PRODUCTION_URL,
         LOCALHOST_URL
