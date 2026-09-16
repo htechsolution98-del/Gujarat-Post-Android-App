@@ -15,17 +15,25 @@
         android:theme="@style/Theme.GujaratPost"
         android:networkSecurityConfig="@xml/network_security_config">
 
-        <!-- Main Home & Portal Activity -->
+        <!-- Animated Brand Splash Launcher Activity -->
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.splash.SplashActivity"
             android:theme="@style/Theme.GujaratPost.Splash"
             android:exported="true"
-            android:launchMode="singleTop"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <!-- Main Home & Portal Activity -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:theme="@style/Theme.GujaratPost"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait">
         </activity>
 
         <!-- Full Article Detail Activity with Deep Link Support -->

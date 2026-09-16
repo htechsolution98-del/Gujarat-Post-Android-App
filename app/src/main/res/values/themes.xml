@@ -21,9 +21,9 @@
 
     <!-- Splash Screen Launch Theme for Instant Smooth Startup -->
     <style name="Theme.GujaratPost.Splash" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash_background</item>
-        <item name="android:statusBarColor">@color/brand_primary</item>
+        <item name="android:windowBackground">@drawable/bg_splash_gradient</item>
+        <item name="android:statusBarColor">@color/splash_top</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">@color/brand_primary</item>
+        <item name="android:navigationBarColor">@color/splash_bottom</item>
     </style>
 </resources>

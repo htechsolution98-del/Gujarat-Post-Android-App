@@ -7,12 +7,23 @@
     <color name="brand_accent">#D97706</color>
     <color name="breaking_red">#DC2626</color>
 
+    <!-- Modern Editorial Color Palette -->
+    <color name="text_headline">#0F172A</color>
+    <color name="text_body">#334155</color>
+    <color name="text_metadata">#64748B</color>
+    <color name="brand_red">#DC2626</color>
+    <color name="brand_red_dark">#B91C1C</color>
+    <color name="bg_warm_red">#FEF2F2</color>
+    <color name="border_card">#F1F5F9</color>
+    <color name="splash_top">#8E0E15</color>
+    <color name="splash_bottom">#B3121B</color>
+
     <!-- Surfaces & Neutrals -->
-    <color name="bg_main">#F8F9FA</color>
+    <color name="bg_main">#F8FAFC</color>
     <color name="surface_card">#FFFFFF</color>
-    <color name="text_primary">#18181B</color>
-    <color name="text_secondary">#64748B</color>
-    <color name="text_tertiary">#94A3B8</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#475569</color>
+    <color name="text_tertiary">#64748B</color>
     <color name="divider_line">#E2E8F0</color>
 
     <!-- Dark Mode Colors -->

@@ -89,13 +89,16 @@ class CategoryAdapter(
             val isSelected = position == selectedIndex
 
             if (isSelected) {
-                // RED active text and RED indicator bar
-                binding.tvCategoryName.setTextColor(Color.parseColor("#E53935"))
-                binding.viewIndicator.visibility = View.VISIBLE
-                binding.viewIndicator.setBackgroundColor(Color.parseColor("#E53935"))
+                // Active capsule: solid red background + bold white text
+                binding.layoutChipContainer.setBackgroundResource(R.drawable.bg_category_active)
+                binding.tvCategoryName.setTextColor(Color.WHITE)
+                binding.tvCategoryName.setTypeface(null, android.graphics.Typeface.BOLD)
+                binding.viewIndicator.visibility = View.GONE
             } else {
-                // Subtle white-grey inactive text
-                binding.tvCategoryName.setTextColor(Color.parseColor("#CCCCCC"))
+                // Inactive capsule: white card + subtle border + slate text
+                binding.layoutChipContainer.setBackgroundResource(R.drawable.bg_category_inactive)
+                binding.tvCategoryName.setTextColor(Color.parseColor("#334155"))
+                binding.tvCategoryName.setTypeface(null, android.graphics.Typeface.NORMAL)
                 binding.viewIndicator.visibility = View.GONE
             }
 

@@ -5,13 +5,13 @@
     android:layout_height="match_parent"
     android:background="@color/bg_main">
 
-    <!-- Pinned Black Horizontal Categories Ticker Bar -->
+    <!-- Modern Horizontal Categories Bar -->
     <FrameLayout
         android:id="@+id/layout_categories_container"
         android:layout_width="0dp"
-        android:layout_height="44dp"
-        android:background="#000000"
-        android:elevation="2dp"
+        android:layout_height="48dp"
+        android:background="@color/white"
+        android:elevation="1dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -22,7 +22,13 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:orientation="horizontal"
-            android:paddingHorizontal="4dp" />
+            android:paddingHorizontal="6dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="bottom"
+            android:background="#E2E8F0" />
     </FrameLayout>
 
     <!-- Primary Vertically Scrolling Articles RecyclerView wrapped in SwipeRefreshLayout -->
