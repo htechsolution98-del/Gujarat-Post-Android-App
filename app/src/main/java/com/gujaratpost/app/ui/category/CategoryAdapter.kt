@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.gujaratpost.app.R
 import com.gujaratpost.app.data.models.Category
 import com.gujaratpost.app.databinding.ItemCategoryChipBinding
 
