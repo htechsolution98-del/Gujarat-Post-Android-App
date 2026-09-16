@@ -147,6 +147,19 @@ object RetrofitClient {
 
         if (!saved.isNullOrBlank()) {
             val formatted = if (saved.endsWith("/")) saved else "$saved/"
+            // In release builds, enforce HTTPS and reject any local or tunnel dev endpoints
+            if (!com.gujaratpost.app.BuildConfig.DEBUG) {
+                val isDevEndpoint = !formatted.startsWith("https://", ignoreCase = true) ||
+                        formatted.contains("loca.lt", ignoreCase = true) ||
+                        formatted.contains("192.168.", ignoreCase = true) ||
+                        formatted.contains("10.0.2.2", ignoreCase = true) ||
+                        formatted.contains("localhost", ignoreCase = true)
+                if (isDevEndpoint) {
+                    currentBaseUrl = Constants.CLOUD_PRODUCTION_URL
+                    retrofitInstance = null
+                    return
+                }
+            }
             currentBaseUrl = formatted
             retrofitInstance = null
         }
@@ -174,6 +187,11 @@ object RetrofitClient {
 
     private fun saveWorkingServer(url: String) {
         try {
+            if (!com.gujaratpost.app.BuildConfig.DEBUG) {
+                if (!url.startsWith("https://", ignoreCase = true) || url.contains("loca.lt")) {
+                    return
+                }
+            }
             val prefs = GujaratPostApp.instance.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().putString(Constants.KEY_ACTIVE_SERVER_URL, url).apply()
         } catch (e: Exception) {

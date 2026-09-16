@@ -1,25 +1,43 @@
 package com.gujaratpost.app.utils
 
-object Constants {
-    // Public live tunnel endpoint (works anywhere on 4G/5G, Wi-Fi, across any network)
-    const val TUNNEL_LIVE_URL = "https://gujaratpost-news-api.loca.lt/"
-    const val LOCAL_WIFI_URL = "http://192.168.1.16:5000/"
-    const val LOCAL_FRONTEND_URL = "http://192.168.1.16:3000/"
-    const val LOCAL_EMULATOR_URL = "http://10.0.2.2:5000/"
-    const val PREV_WIFI_URL = "http://10.110.59.96:5000/"
-    const val CLOUD_PRODUCTION_URL = "https://gujaratpost.vercel.app/"
+import com.gujaratpost.app.BuildConfig
 
-    // Primary default URL: Live tunnel for guaranteed connectivity everywhere
-    const val DEFAULT_BASE_URL = TUNNEL_LIVE_URL
+object Constants {
+    // Production Cloud HTTPS endpoint
+    const val CLOUD_PRODUCTION_URL = "https://gujaratpost.vercel.app/"
     const val WEB_BASE_URL = CLOUD_PRODUCTION_URL
 
-    // Ordered list of candidate backend URLs for automatic failover discovery
-    val CANDIDATE_BASE_URLS = listOf(
-        TUNNEL_LIVE_URL,
-        LOCAL_WIFI_URL,
-        LOCAL_FRONTEND_URL,
-        CLOUD_PRODUCTION_URL
-    )
+    // Local & debug development endpoints (isolated to debug builds)
+    const val LOCAL_EMULATOR_URL = "http://10.0.2.2:5000/"
+    const val LOCAL_WIFI_URL = "http://192.168.1.16:5000/"
+    const val LOCAL_FRONTEND_URL = "http://192.168.1.16:3000/"
+    const val TUNNEL_LIVE_URL = "https://gujaratpost-news-api.loca.lt/"
+
+    // In Release: Strict HTTPS cloud production URL.
+    // In Debug: Local development or tunnel endpoint can be used.
+    val DEFAULT_BASE_URL: String
+        get() = if (BuildConfig.DEBUG) {
+            TUNNEL_LIVE_URL
+        } else {
+            CLOUD_PRODUCTION_URL
+        }
+
+    // Failover candidate list:
+    // In Release: Only secure HTTPS endpoints (no cleartext, no localhost, no localtunnel).
+    // In Debug: Includes local dev endpoints for testing.
+    val CANDIDATE_BASE_URLS: List<String>
+        get() = if (BuildConfig.DEBUG) {
+            listOf(
+                TUNNEL_LIVE_URL,
+                LOCAL_EMULATOR_URL,
+                LOCAL_WIFI_URL,
+                CLOUD_PRODUCTION_URL
+            )
+        } else {
+            listOf(
+                CLOUD_PRODUCTION_URL
+            )
+        }
 
     // Shared Preferences
     const val PREFS_NAME = "gujarat_post_prefs"

@@ -20,23 +20,33 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('gujaratpost-release.jks')
-            storePassword 'gujaratpost123'
-            keyAlias 'gujaratpost'
-            keyPassword 'gujaratpost123'
-            v1SigningEnabled true
-            v2SigningEnabled true
+            def storeFilePath = System.getenv("RELEASE_STORE_FILE") ?: (project.findProperty("RELEASE_STORE_FILE") ?: "gujaratpost-release.jks")
+            def storePasswordVal = System.getenv("RELEASE_STORE_PASSWORD") ?: (project.findProperty("RELEASE_STORE_PASSWORD") ?: "")
+            def keyAliasVal = System.getenv("RELEASE_KEY_ALIAS") ?: (project.findProperty("RELEASE_KEY_ALIAS") ?: "")
+            def keyPasswordVal = System.getenv("RELEASE_KEY_PASSWORD") ?: (project.findProperty("RELEASE_KEY_PASSWORD") ?: "")
+
+            def keystoreFile = file(storeFilePath)
+            if (keystoreFile.exists() && storePasswordVal && keyAliasVal) {
+                storeFile keystoreFile
+                storePassword storePasswordVal
+                keyAlias keyAliasVal
+                keyPassword keyPasswordVal
+                v1SigningEnabled true
+                v2SigningEnabled true
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            def releaseConfig = signingConfigs.findByName("release")
+            if (releaseConfig?.storeFile?.exists() && releaseConfig?.storePassword) {
+                signingConfig releaseConfig
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            signingConfig signingConfigs.release
             debuggable true
         }
     }
@@ -52,6 +62,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 }
 

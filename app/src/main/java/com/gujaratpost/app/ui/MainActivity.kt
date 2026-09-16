@@ -14,7 +14,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.gujaratpost.app.R
 import com.gujaratpost.app.databinding.ActivityMainBinding
-import com.gujaratpost.app.ui.category.CategoryFragment
 import com.gujaratpost.app.ui.home.HomeFragment
 import com.gujaratpost.app.ui.saved.SavedArticlesFragment
 
@@ -23,7 +22,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     private val homeFragment by lazy { HomeFragment() }
-    private val categoryFragment by lazy { CategoryFragment() }
     private val savedArticlesFragment by lazy { SavedArticlesFragment() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -273,7 +271,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("API સર્વર સેટિંગ્સ (Server Settings)")
             .setSingleChoiceItems(servers, selectedIndex) { dialog, which ->
                 dialog.dismiss()
-                if (which == 3) {
+                if (which == 4) {
                     showCustomServerInputDialog()
                 } else {
                     val chosen = serverUrls[which]

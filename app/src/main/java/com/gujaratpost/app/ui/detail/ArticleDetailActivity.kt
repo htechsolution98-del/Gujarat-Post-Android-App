@@ -31,6 +31,22 @@ class ArticleDetailActivity : AppCompatActivity() {
             val initialPosition = intent.getIntExtra("EXTRA_ARTICLE_POSITION", ArticleRepository.currentPosition)
             articlesList = ArticleRepository.currentArticles
 
+            // Check for Deep Link Uri
+            val deepLinkData = intent.data
+            if (deepLinkData != null) {
+                val path = deepLinkData.path.orEmpty()
+                val slugFromUrl = deepLinkData.lastPathSegment.orEmpty()
+                if (slugFromUrl.isNotBlank() && (path.startsWith("/news") || path.startsWith("/article"))) {
+                    val deepLinkArticle = Article(
+                        id = slugFromUrl,
+                        slug = slugFromUrl,
+                        title = "",
+                        titleGu = ""
+                    )
+                    articlesList = listOf(deepLinkArticle)
+                }
+            }
+
             // Fallback: If opened without repository list, create a single article from intent extras
             if (articlesList.isEmpty()) {
                 val articleId = intent.getStringExtra(Constants.EXTRA_ARTICLE_ID).orEmpty()
@@ -67,6 +83,19 @@ class ArticleDetailActivity : AppCompatActivity() {
     private fun setupViewPager(startPos: Int) {
         pagerAdapter = ArticlePagerAdapter(articlesList)
         binding.viewPagerArticles.adapter = pagerAdapter
+
+        // Production Hardening: 3D Newspaper Page Transformer and 1-page offscreen cache
+        binding.viewPagerArticles.offscreenPageLimit = 1
+        binding.viewPagerArticles.setPageTransformer(NewspaperPageTransformer())
+
+        // Prevent clipping during 3D page turn
+        binding.viewPagerArticles.clipToPadding = false
+        binding.viewPagerArticles.clipChildren = false
+        (binding.viewPagerArticles.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView)?.apply {
+            clipChildren = false
+            clipToPadding = false
+        }
+
         binding.viewPagerArticles.setCurrentItem(startPos, false)
         currentIndex = startPos
 

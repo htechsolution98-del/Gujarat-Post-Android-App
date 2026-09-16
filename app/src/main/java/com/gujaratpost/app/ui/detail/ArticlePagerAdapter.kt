@@ -18,6 +18,10 @@ class ArticlePagerAdapter(
     initialArticles: List<Article>
 ) : RecyclerView.Adapter<ArticlePagerAdapter.ArticlePageViewHolder>() {
 
+    companion object {
+        const val PAYLOAD_CONTENT_UPDATE = "PAYLOAD_CONTENT_UPDATE"
+    }
+
     private val articles = initialArticles.toMutableList()
 
     fun updateArticleAt(position: Int, fullArticle: Article) {
@@ -25,7 +29,7 @@ class ArticlePagerAdapter(
             articles[position] = fullArticle
             android.os.Handler(android.os.Looper.getMainLooper()).post {
                 try {
-                    notifyItemChanged(position)
+                    notifyItemChanged(position, PAYLOAD_CONTENT_UPDATE)
                 } catch (e: Throwable) {
                     android.util.Log.e("ArticlePagerAdapter", "Failed to notify item changed", e)
                 }
@@ -46,12 +50,123 @@ class ArticlePagerAdapter(
         holder.bind(articles[position])
     }
 
+    override fun onBindViewHolder(
+        holder: ArticlePageViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.contains(PAYLOAD_CONTENT_UPDATE)) {
+            holder.updateContentOnly(articles[position])
+        } else {
+            super.onBindViewHolder(holder, position, payloads)
+        }
+    }
+
+    override fun onViewRecycled(holder: ArticlePageViewHolder) {
+        super.onViewRecycled(holder)
+        holder.clear()
+    }
+
     override fun getItemCount(): Int = articles.size
 
     inner class ArticlePageViewHolder(
         private val binding: ItemArticleDetailPageBinding,
         private val context: Context
     ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun clear() {
+            try {
+                Glide.with(context).clear(binding.ivPageImage)
+                Glide.with(context).clear(binding.ivPageAuthorAvatar)
+            } catch (e: Throwable) {
+                // Safe fallback
+            }
+        }
+
+        fun updateContentOnly(article: Article) {
+            try {
+                val currentScrollY = binding.root.scrollY
+
+                // Full formatted body content (HTML or clean plain text paragraphs)
+                val rawContent = article.displayContent.trim()
+                val hasHtml = rawContent.contains("<p>", ignoreCase = true) ||
+                              rawContent.contains("<br", ignoreCase = true) ||
+                              rawContent.contains("<div>", ignoreCase = true) ||
+                              rawContent.contains("<span>", ignoreCase = true)
+
+                val formatted = if (hasHtml) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        Html.fromHtml(rawContent, Html.FROM_HTML_MODE_COMPACT)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        Html.fromHtml(rawContent)
+                    }
+                } else {
+                    rawContent
+                }
+                binding.tvPageContent.text = formatted
+
+                // Lead excerpt callout
+                val excerpt = article.displayExcerpt.trim()
+                if (excerpt.isNotBlank() && excerpt != rawContent && excerpt != article.displayTitle.trim()) {
+                    binding.layoutPageExcerpt.visibility = View.VISIBLE
+                    binding.tvPageExcerpt.text = excerpt
+                } else {
+                    binding.layoutPageExcerpt.visibility = View.GONE
+                }
+
+                // Tags Chips
+                val tagsList = article.safeTags
+                if (tagsList.isNotEmpty()) {
+                    binding.layoutPageTags.visibility = View.VISIBLE
+                    binding.containerTagChips.removeAllViews()
+                    for (t in tagsList) {
+                        val chip = android.widget.TextView(context).apply {
+                            text = if (t.startsWith("#")) t else "#$t"
+                            setBackgroundResource(R.drawable.bg_chip_tag)
+                            setPadding(24, 12, 24, 12)
+                            setTextColor(android.graphics.Color.parseColor("#334155"))
+                            textSize = 12f
+                            val lp = android.widget.LinearLayout.LayoutParams(
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                setMargins(0, 0, 16, 0)
+                            }
+                            layoutParams = lp
+                        }
+                        binding.containerTagChips.addView(chip)
+                    }
+                } else {
+                    binding.layoutPageTags.visibility = View.GONE
+                }
+
+                // Reading time & location
+                val loc = article.location?.trim().orEmpty()
+                if (loc.isNotBlank()) {
+                    binding.tvPageLocation.visibility = View.VISIBLE
+                    binding.tvPageLocation.text = "📍 $loc"
+                }
+                val rTime = article.readingTime ?: 3
+                binding.tvPageReadingTime.visibility = View.VISIBLE
+                binding.tvPageReadingTime.text = "⏱️ $rTime મિનિટ"
+
+                // Views
+                val viewsNum = article.views ?: 0L
+                val viewCountNum = article.viewCount ?: 0L
+                val viewCount = if (viewsNum > 0) viewsNum else viewCountNum
+                binding.tvPageViews.text = if (viewCount > 0) "👁️ $viewCount" else ""
+
+                // Restore scroll position after content inflation to avoid jumping
+                if (currentScrollY > 0) {
+                    binding.root.post {
+                        binding.root.scrollY = currentScrollY
+                    }
+                }
+            } catch (e: Throwable) {
+                android.util.Log.e("ArticlePagerAdapter", "Error in updateContentOnly", e)
+            }
+        }
 
         fun bind(article: Article) {
             try {
@@ -97,6 +212,7 @@ class ArticlePagerAdapter(
                 if (authorImgUrl.isNotBlank()) {
                     Glide.with(context)
                         .load(authorImgUrl)
+                        .override(120, 120)
                         .circleCrop()
                         .placeholder(R.drawable.ic_author_default)
                         .error(R.drawable.ic_author_default)
@@ -159,12 +275,15 @@ class ArticlePagerAdapter(
                     binding.layoutPageTags.visibility = View.GONE
                 }
 
-                // Cover Image
+                // Cover Image with Downsampling and Progressive loading
                 val imageUrl = article.resolvedImageUrl
                 if (!imageUrl.isNullOrBlank()) {
                     binding.ivPageImage.visibility = View.VISIBLE
                     Glide.with(context)
                         .load(imageUrl)
+                        .override(1080, 750)
+                        .centerCrop()
+                        .thumbnail(0.2f)
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .placeholder(R.drawable.rounded_card_bg)
                         .error(R.drawable.rounded_card_bg)

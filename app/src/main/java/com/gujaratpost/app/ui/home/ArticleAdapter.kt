@@ -32,10 +32,23 @@ class ArticleAdapter(
         holder.bind(getItem(position))
     }
 
+    override fun onViewRecycled(holder: ArticleViewHolder) {
+        super.onViewRecycled(holder)
+        holder.clear()
+    }
+
     inner class ArticleViewHolder(
         private val binding: ItemArticleCardBinding,
         private val context: Context
     ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun clear() {
+            try {
+                Glide.with(context).clear(binding.ivThumbnail)
+            } catch (e: Throwable) {
+                // Safe fallback
+            }
+        }
 
         fun bind(article: Article) {
             binding.tvTitle.text = article.displayTitle
@@ -43,12 +56,14 @@ class ArticleAdapter(
             binding.tvDate.text = DateFormatter.formatIsoDate(article.publishedAt ?: article.createdAt)
             binding.tvCategoryTag.text = article.categoryName
 
-            // Thumbnail image loading via Glide with resolved full URL
+            // Thumbnail image loading via Glide with downsampling and centerCrop
             val imageUrl = article.resolvedImageUrl
             if (!imageUrl.isNullOrBlank()) {
                 binding.ivThumbnail.visibility = View.VISIBLE
                 Glide.with(context)
                     .load(imageUrl)
+                    .override(300, 240)
+                    .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .placeholder(R.drawable.rounded_card_bg)
                     .error(R.drawable.rounded_card_bg)

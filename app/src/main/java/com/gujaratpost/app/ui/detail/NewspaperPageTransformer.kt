@@ -25,78 +25,78 @@ class NewspaperPageTransformer : ViewPager2.PageTransformer {
             val height = view.height.toFloat()
             if (width <= 0f || height <= 0f) return
 
-            // 3D perspective camera distance (prevents near-plane clipping)
-            view.cameraDistance = 25000f * view.resources.displayMetrics.density
+            // Density-aware 3D perspective camera distance (prevents near-plane clipping/distortion)
+            view.cameraDistance = 12000f * view.resources.displayMetrics.density
 
-        when {
-            position < -1f -> {
-                // Completely off-screen to the left
-                view.alpha = 0f
-                view.visibility = View.INVISIBLE
-                view.translationX = 0f
-                view.rotationY = 0f
+            when {
+                position < -1f -> {
+                    // Completely off-screen to the left
+                    view.alpha = 0f
+                    view.visibility = View.INVISIBLE
+                    view.translationX = 0f
+                    view.rotationY = 0f
+                }
+                position <= 0f -> {
+                    // Left page: Turning around left spine (pivotX = 0)
+                    view.visibility = View.VISIBLE
+
+                    // Pin spine in place to cancel default ViewPager2 slide
+                    view.translationX = -position * width
+
+                    view.pivotX = 0f
+                    view.pivotY = height * 0.5f
+
+                    // Rotate 0 deg -> -90 deg
+                    view.rotationY = 90f * position
+
+                    val absPos = abs(position)
+                    // High elevation so it turns above the underlying page
+                    view.elevation = (1f - absPos) * 20f + 10f
+
+                    // Gentle depth scale
+                    val scale = 1f - 0.05f * absPos
+                    view.scaleX = scale
+                    view.scaleY = scale
+
+                    // Smooth fade near 90 degrees so back is not visible
+                    view.alpha = if (absPos > 0.96f) 0f else 1f - 0.15f * absPos
+                }
+                position <= 1f -> {
+                    // Right page: Resting underneath, revealed as top page flips
+                    view.visibility = View.VISIBLE
+
+                    // Pin in place underneath turning page
+                    view.translationX = -position * width
+
+                    view.pivotX = 0f
+                    view.pivotY = height * 0.5f
+                    view.rotationY = 0f
+
+                    // Base elevation below the turning page
+                    view.elevation = 2f
+
+                    // Subtle depth scale
+                    val scale = 0.95f + 0.05f * (1f - position)
+                    view.scaleX = scale
+                    view.scaleY = scale
+
+                    // Visible with subtle depth dimming
+                    view.alpha = 1f - 0.2f * position
+                }
+                else -> {
+                    // Completely off-screen to the right
+                    view.alpha = 0f
+                    view.visibility = View.INVISIBLE
+                    view.translationX = 0f
+                    view.rotationY = 0f
+                }
             }
-            position <= 0f -> {
-                // Left page: As position goes 0 -> -1, turns to the left around left spine
-                view.visibility = View.VISIBLE
-
-                // CRITICAL: Cancels ViewPager2 horizontal translation so the spine stays pinned
-                view.translationX = -position * width
-
-                // Pivot on left edge
-                view.pivotX = 0f
-                view.pivotY = height * 0.5f
-
-                // Rotate around Y-axis (0 deg to -90 deg)
-                view.rotationY = 90f * position
-
-                val absPos = abs(position)
-                // Elevation hierarchy
-                view.elevation = (1f - absPos) * 30f + 10f
-
-                // Gentle depth scale
-                val scale = 1f - 0.05f * absPos
-                view.scaleX = scale
-                view.scaleY = scale
-
-                // Smooth fade at the extreme edge so mirrored back is never visible
-                view.alpha = if (absPos > 0.95f) 0f else 1f - 0.12f * absPos
-            }
-            position <= 1f -> {
-                // Right page: As position goes 0 -> 1, turns to the right around right edge
-                view.visibility = View.VISIBLE
-
-                // CRITICAL: Cancels ViewPager2 horizontal translation so the spine stays pinned
-                view.translationX = -position * width
-
-                // Pivot on right edge
-                view.pivotX = width
-                view.pivotY = height * 0.5f
-
-                // Rotate around Y-axis (0 deg to +90 deg)
-                view.rotationY = 90f * position
-
-                val absPos = abs(position)
-                view.elevation = (1f - absPos) * 30f + 5f
-
-                // Gentle depth scale
-                val scale = 1f - 0.05f * absPos
-                view.scaleX = scale
-                view.scaleY = scale
-
-                // Smooth fade at the extreme edge
-                view.alpha = if (absPos > 0.95f) 0f else 1f - 0.12f * absPos
-            }
-            else -> {
-                // Completely off-screen to the right
-                view.alpha = 0f
-                view.visibility = View.INVISIBLE
-                view.translationX = 0f
-                view.rotationY = 0f
-            }
+        } catch (e: Throwable) {
+            view.alpha = 1f
+            view.translationX = 0f
+            view.rotationY = 0f
+            view.scaleX = 1f
+            view.scaleY = 1f
         }
-    } catch (e: Throwable) {
-        // Safe fallback
     }
-}
 }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingVertical="12dp">
+
+    <!-- Bottom Pagination Loading Indicator -->
+    <ProgressBar
+        android:id="@+id/progress_pagination"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:indeterminateTint="@color/brand_primary"
+        android:visibility="gone" />
+
+    <!-- End of Articles Message -->
+    <TextView
+        android:id="@+id/tv_no_more_articles"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="12dp"
+        android:gravity="center"
+        android:text="બધા સમાચાર દર્શાવવામાં આવ્યા છે"
+        android:textColor="@color/text_secondary"
+        android:textSize="12.5sp"
+        android:visibility="gone" />
+</LinearLayout>

@@ -16,3 +16,9 @@ local.properties
 
 apk-output/
 *.apk
+
+# Keystore & Signing Secrets
+*.jks
+*.keystore
+signing-key-info.txt
+local.properties

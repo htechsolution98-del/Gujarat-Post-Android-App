@@ -5,22 +5,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import androidx.recyclerview.widget.RecyclerView
 import com.gujaratpost.app.R
 import com.gujaratpost.app.data.ArticleRepository
 import com.gujaratpost.app.data.api.RetrofitClient
 import com.gujaratpost.app.data.models.Article
 import com.gujaratpost.app.data.models.Category
 import com.gujaratpost.app.databinding.FragmentHomeBinding
+import com.gujaratpost.app.ui.MainActivity
 import com.gujaratpost.app.ui.category.CategoryAdapter
 import com.gujaratpost.app.ui.detail.ArticleDetailActivity
 import com.gujaratpost.app.utils.Constants
-import com.gujaratpost.app.utils.DateFormatter
 import com.gujaratpost.app.utils.NewsCacheManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -32,8 +31,15 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
+    // Adapters
     private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var articleAdapter: ArticleAdapter
+    private lateinit var breakingHeaderAdapter: BreakingNewsHeaderAdapter
+    private lateinit var heroHeaderAdapter: HeroArticleAdapter
+    private lateinit var sectionHeaderAdapter: SectionHeaderAdapter
+    private lateinit var footerLoadingAdapter: FooterLoadingAdapter
+
+    // State
     private var selectedCategorySlug: String? = null
     private var currentHeroArticle: Article? = null
     private var currentFeedArticles: List<Article> = emptyList()
@@ -64,10 +70,10 @@ class HomeFragment : Fragment() {
         // 0. Restore saved server preferences if any
         RetrofitClient.initFromPreferences(requireContext())
 
-        // 1. Initialize category bar immediately with defaults
+        // 1. Initialize pinned category ticker bar immediately with defaults
         setupCategoriesBar()
 
-        // 2. Initialize article feed & infinite scroll
+        // 2. Initialize unified virtualized RecyclerView feed with ConcatAdapter
         setupRecyclerView()
         setupSwipeRefresh()
         setupInfiniteScroll()
@@ -116,11 +122,29 @@ class HomeFragment : Fragment() {
         articleAdapter = ArticleAdapter { article ->
             openArticleDetail(article)
         }
+        breakingHeaderAdapter = BreakingNewsHeaderAdapter { article ->
+            openArticleDetail(article)
+        }
+        heroHeaderAdapter = HeroArticleAdapter { article ->
+            openArticleDetail(article)
+        }
+        sectionHeaderAdapter = SectionHeaderAdapter()
+        footerLoadingAdapter = FooterLoadingAdapter()
+
+        // ConcatAdapter joins all components into a single virtualized scrolling container
+        val concatAdapter = ConcatAdapter(
+            breakingHeaderAdapter,
+            heroHeaderAdapter,
+            sectionHeaderAdapter,
+            articleAdapter,
+            footerLoadingAdapter
+        )
+
         binding.rvArticles.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = articleAdapter
-            isNestedScrollingEnabled = false
-            setItemViewCacheSize(20)
+            adapter = concatAdapter
+            setHasFixedSize(true)
+            setItemViewCacheSize(10)
         }
 
         binding.btnRetry.setOnClickListener {
@@ -137,16 +161,21 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupInfiniteScroll() {
-        binding.nestedScrollView.setOnScrollChangeListener(
-            NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, _ ->
-                if (v.getChildAt(0) != null) {
-                    val diff = v.getChildAt(0).bottom - (v.height + scrollY)
-                    if (diff <= 500) {
-                        loadNextPage()
-                    }
+        binding.rvArticles.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (dy <= 0) return // Only check on downward scroll
+
+                val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+
+                // Guard against duplicate / concurrent loads
+                if (!isLoadingMore && hasMorePages && totalItemCount > 0 && lastVisibleItem >= totalItemCount - 4) {
+                    loadNextPage()
                 }
             }
-        )
+        })
     }
 
     private fun loadCachedData() {
@@ -154,15 +183,16 @@ class HomeFragment : Fragment() {
             val cached = NewsCacheManager.getCachedArticles(requireContext())
             if (cached.isNotEmpty()) {
                 currentHeroArticle = cached[0]
-                setupHeroFeaturedCard(cached[0])
+                heroHeaderAdapter.submitHeroArticle(cached[0])
 
                 val feed: List<Article> = if (cached.size > 1) cached.subList(1, cached.size) else emptyList()
                 currentFeedArticles = feed
                 articleAdapter.submitList(feed)
 
-                binding.tvSectionHeader.visibility = View.VISIBLE
+                sectionHeaderAdapter.setTitle(getString(R.string.latest_news_title))
                 binding.progressLoading.visibility = View.GONE
                 binding.layoutError.visibility = View.GONE
+                updateRepositoryArticles()
             }
         } catch (e: Exception) {
             // Ignore cache read failures
@@ -175,7 +205,7 @@ class HomeFragment : Fragment() {
         selectedCategorySlug = targetSlug
         currentPage = 1
         hasMorePages = true
-        binding.tvNoMoreArticles.visibility = View.GONE
+        footerLoadingAdapter.setState(loading = false, showNoMore = false)
 
         if (_binding != null) {
             val lookupSlug = categorySlug ?: "all"
@@ -185,16 +215,18 @@ class HomeFragment : Fragment() {
                 binding.rvCategories.smoothScrollToPosition(pos)
             }
 
-            (activity as? com.gujaratpost.app.ui.MainActivity)?.highlightDrawerCategoryBySlug(lookupSlug)
+            (activity as? MainActivity)?.highlightDrawerCategoryBySlug(lookupSlug)
 
-            binding.tvSectionHeader.text = if (!categoryName.isNullOrBlank() && lookupSlug != "all") {
+            val headerText = if (!categoryName.isNullOrBlank() && lookupSlug != "all") {
                 "$categoryName સમાચાર"
             } else {
                 getString(R.string.latest_news_title)
             }
+            sectionHeaderAdapter.setTitle(headerText)
 
             binding.progressLoading.visibility = View.VISIBLE
             binding.layoutError.visibility = View.GONE
+
             lifecycleScope.launch {
                 fetchArticles(selectedCategorySlug, page = 1, isAppend = false)
                 binding.progressLoading.visibility = View.GONE
@@ -214,13 +246,11 @@ class HomeFragment : Fragment() {
         selectedCategorySlug = null
         currentPage = 1
         hasMorePages = true
-        binding.cardHeroFeatured.visibility = View.GONE
         currentHeroArticle = null
-        binding.tvNoMoreArticles.visibility = View.GONE
+        heroHeaderAdapter.submitHeroArticle(null)
+        footerLoadingAdapter.setState(loading = false, showNoMore = false)
 
-        binding.tvSectionHeader.visibility = View.VISIBLE
-        binding.tvSectionHeader.text = "શોધ પરિણામ: \"$trimmed\""
-
+        sectionHeaderAdapter.setTitle("શોધ પરિણામ: \"$trimmed\"")
         binding.progressLoading.visibility = View.VISIBLE
         binding.layoutError.visibility = View.GONE
 
@@ -238,7 +268,7 @@ class HomeFragment : Fragment() {
 
         currentPage = 1
         hasMorePages = true
-        binding.tvNoMoreArticles.visibility = View.GONE
+        footerLoadingAdapter.setState(loading = false, showNoMore = false)
 
         lifecycleScope.launch {
             fetchArticles(selectedCategorySlug, page = 1, isAppend = false, query = currentSearchQuery)
@@ -261,13 +291,13 @@ class HomeFragment : Fragment() {
         }
 
         isLoadingMore = true
-        binding.progressPagination.visibility = View.VISIBLE
+        footerLoadingAdapter.setState(loading = true, showNoMore = false)
 
         val nextPage = currentPage + 1
         lifecycleScope.launch {
             fetchArticles(selectedCategorySlug, page = nextPage, isAppend = true, query = currentSearchQuery)
-            binding.progressPagination.visibility = View.GONE
             isLoadingMore = false
+            footerLoadingAdapter.setState(loading = false, showNoMore = !hasMorePages && currentFeedArticles.isNotEmpty())
         }
     }
 
@@ -302,11 +332,11 @@ class HomeFragment : Fragment() {
                     breakingArticles = breaking
                     startBreakingRotator()
                 } else {
-                    binding.cardBreakingNews.visibility = View.GONE
+                    breakingHeaderAdapter.submitBreakingArticles(emptyList())
                 }
             }
         } catch (e: Exception) {
-            binding.cardBreakingNews.visibility = View.GONE
+            breakingHeaderAdapter.submitBreakingArticles(emptyList())
         }
     }
 
@@ -314,20 +344,12 @@ class HomeFragment : Fragment() {
         breakingRotatorJob?.cancel()
         if (breakingArticles.isEmpty() || _binding == null) return
 
-        binding.cardBreakingNews.visibility = View.VISIBLE
-        binding.tvBreakingCounter.visibility = if (breakingArticles.size > 1) View.VISIBLE else View.GONE
+        currentBreakingIndex = 0
+        breakingHeaderAdapter.submitBreakingArticles(breakingArticles)
 
         breakingRotatorJob = lifecycleScope.launch {
             while (isActive && breakingArticles.isNotEmpty()) {
-                val current = breakingArticles[currentBreakingIndex.coerceIn(0, breakingArticles.size - 1)]
-                binding.tvBreakingNewsTitle.text = current.displayTitle
-                binding.tvBreakingNewsTitle.isSelected = true
-                binding.tvBreakingCounter.text = "${currentBreakingIndex + 1}/${breakingArticles.size}"
-
-                binding.cardBreakingNews.setOnClickListener {
-                    openArticleDetail(current)
-                }
-
+                breakingHeaderAdapter.rotateIndex(currentBreakingIndex)
                 delay(4500)
                 currentBreakingIndex = (currentBreakingIndex + 1) % breakingArticles.size
             }
@@ -361,16 +383,16 @@ class HomeFragment : Fragment() {
                         currentFeedArticles = updatedFeed
                         articleAdapter.submitList(updatedFeed)
                         updateRepositoryArticles()
+                        footerLoadingAdapter.setState(loading = false, showNoMore = false)
                     } else {
                         hasMorePages = false
-                        binding.tvNoMoreArticles.visibility = View.VISIBLE
+                        footerLoadingAdapter.setState(loading = false, showNoMore = true)
                     }
                 } else {
                     // Fresh page 1
                     currentPage = 1
                     if (newArticles.isNotEmpty()) {
                         binding.layoutError.visibility = View.GONE
-                        binding.tvSectionHeader.visibility = View.VISIBLE
 
                         if (query.isNullOrBlank() && (categorySlug == null || categorySlug == "all")) {
                             context?.let { ctx ->
@@ -381,24 +403,25 @@ class HomeFragment : Fragment() {
                         if (query.isNullOrBlank()) {
                             val heroArticle = newArticles[0]
                             currentHeroArticle = heroArticle
-                            setupHeroFeaturedCard(heroArticle)
+                            heroHeaderAdapter.submitHeroArticle(heroArticle)
                             val feedArticles = if (newArticles.size > 1) newArticles.subList(1, newArticles.size) else emptyList()
                             currentFeedArticles = feedArticles
                             articleAdapter.submitList(feedArticles)
+                            sectionHeaderAdapter.setTitle(getString(R.string.latest_news_title))
                         } else {
                             currentHeroArticle = null
-                            binding.cardHeroFeatured.visibility = View.GONE
+                            heroHeaderAdapter.submitHeroArticle(null)
                             currentFeedArticles = newArticles
                             articleAdapter.submitList(newArticles)
-                            binding.tvSectionHeader.text = "શોધ પરિણામો: \"$query\" (${newArticles.size} સમાચાર)"
+                            sectionHeaderAdapter.setTitle("શોધ પરિણામો: \"$query\" (${newArticles.size} સમાચાર)")
                         }
                         updateRepositoryArticles()
+                        footerLoadingAdapter.setState(loading = false, showNoMore = false)
                     } else {
                         currentHeroArticle = null
-                        binding.cardHeroFeatured.visibility = View.GONE
+                        heroHeaderAdapter.submitHeroArticle(null)
                         currentFeedArticles = emptyList()
                         articleAdapter.submitList(emptyList())
-                        binding.tvSectionHeader.visibility = View.VISIBLE
                         binding.layoutError.visibility = View.VISIBLE
                         binding.tvErrorMessage.text = if (!query.isNullOrBlank()) {
                             "\"$query\" માટે કોઈ સમાચાર મળ્યા નથી."
@@ -439,10 +462,10 @@ class HomeFragment : Fragment() {
             }
         } else {
             currentHeroArticle = null
-            binding.cardHeroFeatured.visibility = View.GONE
+            heroHeaderAdapter.submitHeroArticle(null)
             currentFeedArticles = emptyList()
             articleAdapter.submitList(emptyList())
-            binding.tvSectionHeader.visibility = View.GONE
+            sectionHeaderAdapter.setTitle(null)
             binding.layoutError.visibility = View.VISIBLE
             binding.tvErrorMessage.text = "આ કૅટેગરીના સમાચાર મેળવી શકાયા નથી."
         }
@@ -451,40 +474,15 @@ class HomeFragment : Fragment() {
     private fun setupFallbackFeed(fallback: List<Article>) {
         if (fallback.isNotEmpty()) {
             binding.layoutError.visibility = View.GONE
-            binding.tvSectionHeader.visibility = View.VISIBLE
             val hero = fallback[0]
             currentHeroArticle = hero
-            setupHeroFeaturedCard(hero)
+            heroHeaderAdapter.submitHeroArticle(hero)
 
             val feed = if (fallback.size > 1) fallback.subList(1, fallback.size) else emptyList()
             currentFeedArticles = feed
             articleAdapter.submitList(feed)
+            sectionHeaderAdapter.setTitle(getString(R.string.latest_news_title))
             updateRepositoryArticles()
-        }
-    }
-
-    private fun setupHeroFeaturedCard(article: Article) {
-        binding.cardHeroFeatured.visibility = View.VISIBLE
-        binding.tvHeroTitle.text = article.displayTitle
-        binding.tvHeroExcerpt.text = article.displayExcerpt
-        binding.tvHeroCategory.text = article.categoryName
-        binding.tvHeroDate.text = DateFormatter.formatIsoDate(article.publishedAt ?: article.createdAt)
-
-        val imageUrl = article.resolvedImageUrl
-        if (!imageUrl.isNullOrBlank()) {
-            binding.ivHeroImage.visibility = View.VISIBLE
-            Glide.with(this)
-                .load(imageUrl)
-                .transition(DrawableTransitionOptions.withCrossFade(250))
-                .placeholder(R.drawable.rounded_card_bg)
-                .error(R.drawable.rounded_card_bg)
-                .into(binding.ivHeroImage)
-        } else {
-            binding.ivHeroImage.visibility = View.GONE
-        }
-
-        binding.cardHeroFeatured.setOnClickListener {
-            openArticleDetail(article)
         }
     }
 

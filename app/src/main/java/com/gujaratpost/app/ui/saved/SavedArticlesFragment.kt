@@ -13,6 +13,7 @@ import com.gujaratpost.app.databinding.FragmentSavedArticlesBinding
 import com.gujaratpost.app.ui.detail.ArticleDetailActivity
 import com.gujaratpost.app.ui.home.ArticleAdapter
 import com.gujaratpost.app.utils.BookmarkManager
+import com.gujaratpost.app.utils.Constants
 
 class SavedArticlesFragment : Fragment() {
 
