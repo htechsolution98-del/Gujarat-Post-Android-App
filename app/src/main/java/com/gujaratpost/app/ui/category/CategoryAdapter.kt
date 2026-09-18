@@ -62,6 +62,12 @@ class CategoryAdapter(
         return -1
     }
 
+    fun findCategoryNameBySlug(slug: String?): String? {
+        if (slug.isNullOrBlank() || slug == "all") return null
+        return categoryList.firstOrNull { it.slug.equals(slug, ignoreCase = true) }?.displayName
+    }
+
+
     fun updateCategories(newCategories: List<Category>, activeSlug: String? = null) {
         categoryList.clear()
         categoryList.addAll(newCategories)

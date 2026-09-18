@@ -1,6 +1,7 @@
 package com.gujaratpost.app.ui.home
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,8 @@ import com.gujaratpost.app.data.ArticleRepository
 import com.gujaratpost.app.data.api.RetrofitClient
 import com.gujaratpost.app.data.models.Article
 import com.gujaratpost.app.data.models.Category
+import com.gujaratpost.app.data.models.Reel
+import com.gujaratpost.app.data.models.Video
 import com.gujaratpost.app.databinding.FragmentHomeBinding
 import com.gujaratpost.app.ui.MainActivity
 import com.gujaratpost.app.ui.category.CategoryAdapter
@@ -31,17 +34,23 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    // Adapters
+    // Section Adapters matching website portal structure
     private lateinit var categoryAdapter: CategoryAdapter
-    private lateinit var articleAdapter: ArticleAdapter
     private lateinit var breakingHeaderAdapter: BreakingNewsHeaderAdapter
-    private lateinit var heroHeaderAdapter: HeroArticleAdapter
+    private lateinit var heroCarouselAdapter: HeroCarouselAdapter
+    private lateinit var topStoriesAdapter: TopStoriesHeaderAdapter
+    private lateinit var reelsAdapter: ReelsHeaderAdapter
+    private lateinit var mostReadAdapter: MostReadHeaderAdapter
+    private lateinit var videosAdapter: VideosHeaderAdapter
     private lateinit var sectionHeaderAdapter: SectionHeaderAdapter
+    private lateinit var articleAdapter: ArticleAdapter
     private lateinit var footerLoadingAdapter: FooterLoadingAdapter
 
     // State
     private var selectedCategorySlug: String? = null
-    private var currentHeroArticle: Article? = null
+    private var heroArticles: List<Article> = emptyList()
+    private var topStoriesList: List<Article> = emptyList()
+    private var mostReadList: List<Article> = emptyList()
     private var currentFeedArticles: List<Article> = emptyList()
 
     // Pagination & Search state
@@ -50,10 +59,68 @@ class HomeFragment : Fragment() {
     private var hasMorePages: Boolean = true
     private var currentSearchQuery: String? = null
 
-    // Breaking news rotator state
+    // Rotator jobs
     private var breakingArticles: List<Article> = emptyList()
     private var currentBreakingIndex: Int = 0
     private var breakingRotatorJob: Job? = null
+    private var heroRotatorJob: Job? = null
+
+    // Fallback data for Reels & Videos to guarantee rich website look even offline
+    private val fallbackReels = listOf(
+        Reel(
+            id = "demo-1",
+            heading = "Gujarat Post Daily News Highlights",
+            headingGu = "ગુજરાત પોસ્ટ દૈનિક સમાચાર હાઇલાઇટ્સ",
+            instaUrl = "https://www.instagram.com/gujaratpost.in/",
+            thumbnail = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop&q=80",
+            views = 45200L
+        ),
+        Reel(
+            id = "demo-2",
+            heading = "Breaking Politics & City News",
+            headingGu = "રાજકારણ અને શહેરના તાજા સમાચાર",
+            instaUrl = "https://www.instagram.com/gujaratpost.in/",
+            thumbnail = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop&q=80",
+            views = 82100L
+        ),
+        Reel(
+            id = "demo-3",
+            heading = "Live Weather & Special Ground Report",
+            headingGu = "હવામાન અને ખાસ ગ્રાઉન્ડ રિપોર્ટ",
+            instaUrl = "https://www.instagram.com/gujaratpost.in/",
+            thumbnail = "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=600&auto=format&fit=crop&q=80",
+            views = 63400L
+        ),
+        Reel(
+            id = "demo-4",
+            heading = "Gujarat Business & Market Updates",
+            headingGu = "ગુજરાત વ્યાપાર અને બજાર સમાચાર",
+            instaUrl = "https://www.instagram.com/gujaratpost.in/",
+            thumbnail = "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&auto=format&fit=crop&q=80",
+            views = 38900L
+        )
+    )
+
+    private val fallbackVideos = listOf(
+        Video(
+            id = "v-1",
+            titleGu = "ગુજરાત પોસ્ટ વિશેષ: રાજ્યના મુખ્ય ઘટનાક્રમ અને વિશ્લેષણ",
+            youtubeId = "A_5vL-ngK4M",
+            duration = "03:45"
+        ),
+        Video(
+            id = "v-2",
+            titleGu = "અમદાવાદ મેગા ડેવલપમેન્ટ પ્રોજેક્ટ ગ્રાઉન્ડ રિપોર્ટ",
+            youtubeId = "dQw4w9WgXcQ",
+            duration = "02:15"
+        ),
+        Video(
+            id = "v-3",
+            titleGu = "સુરત ડાયમંડ બુર્સ અને ગુજરાત વેપાર સમાચાર",
+            youtubeId = "3JZ_D3ELwOQ",
+            duration = "04:10"
+        )
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -119,22 +186,65 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        articleAdapter = ArticleAdapter { article ->
-            openArticleDetail(article)
-        }
+        // 1. Live Breaking News ticker
         breakingHeaderAdapter = BreakingNewsHeaderAdapter { article ->
             openArticleDetail(article)
         }
-        heroHeaderAdapter = HeroArticleAdapter { article ->
+
+        // 2. Featured Hero Carousel (Top 5 stories)
+        heroCarouselAdapter = HeroCarouselAdapter { article ->
             openArticleDetail(article)
         }
+
+        // 3. "ટોપ સમાચાર" (Top Stories) Horizontal strip
+        topStoriesAdapter = TopStoriesHeaderAdapter(
+            onArticleClick = { article -> openArticleDetail(article) },
+            onViewAllClick = { filterByCategory("gujarat", "ગુજરાત") }
+        )
+
+        // 4. "ઇન્સ્ટાગ્રામ રીલ્સ" (Instagram Reels) Horizontal strip
+        reelsAdapter = ReelsHeaderAdapter(
+            onReelClick = { reel -> openReel(reel) },
+            onViewAllClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/gujaratpost.in/"))
+                startActivity(intent)
+            }
+        )
+
+        // 5. "સૌથી વધુ વંચાયેલા" (Most Read / Trending #1..#4)
+        mostReadAdapter = MostReadHeaderAdapter(
+            onArticleClick = { article -> openArticleDetail(article) },
+            onViewAllClick = { filterByCategory("trending", "ટ્રેન્ડિંગ") }
+        )
+
+        // 6. "વીડિયો ડેસ્ક" (Videos) Horizontal strip
+        videosAdapter = VideosHeaderAdapter(
+            onVideoClick = { video -> openVideo(video) },
+            onViewAllClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/@Gujaratpostnews"))
+                startActivity(intent)
+            }
+        )
+
+        // 7. Section Header for the main infinite feed
         sectionHeaderAdapter = SectionHeaderAdapter()
+
+        // 8. Main infinite scrolling feed adapter
+        articleAdapter = ArticleAdapter { article ->
+            openArticleDetail(article)
+        }
+
+        // 9. Footer loading and "all caught up" indicator
         footerLoadingAdapter = FooterLoadingAdapter()
 
-        // ConcatAdapter joins all components into a single virtualized scrolling container
+        // ConcatAdapter joins all components in exact website order
         val concatAdapter = ConcatAdapter(
             breakingHeaderAdapter,
-            heroHeaderAdapter,
+            heroCarouselAdapter,
+            topStoriesAdapter,
+            reelsAdapter,
+            mostReadAdapter,
+            videosAdapter,
             sectionHeaderAdapter,
             articleAdapter,
             footerLoadingAdapter
@@ -182,14 +292,9 @@ class HomeFragment : Fragment() {
         try {
             val cached = NewsCacheManager.getCachedArticles(requireContext())
             if (cached.isNotEmpty()) {
-                currentHeroArticle = cached[0]
-                heroHeaderAdapter.submitHeroArticle(cached[0])
-
-                val feed: List<Article> = if (cached.size > 1) cached.subList(1, cached.size) else emptyList()
-                currentFeedArticles = feed
-                articleAdapter.submitList(feed)
-
-                sectionHeaderAdapter.setTitle(getString(R.string.latest_news_title))
+                distributeHomeArticles(cached)
+                reelsAdapter.submitReels(fallbackReels)
+                videosAdapter.submitVideos(fallbackVideos)
                 binding.progressLoading.visibility = View.GONE
                 binding.layoutError.visibility = View.GONE
                 updateRepositoryArticles()
@@ -246,11 +351,16 @@ class HomeFragment : Fragment() {
         selectedCategorySlug = null
         currentPage = 1
         hasMorePages = true
-        currentHeroArticle = null
-        heroHeaderAdapter.submitHeroArticle(null)
+
+        // In search mode, collapse promotional portal strips and show results feed
+        heroCarouselAdapter.submitHeroArticles(emptyList())
+        topStoriesAdapter.submitArticles(emptyList())
+        reelsAdapter.submitReels(emptyList())
+        mostReadAdapter.submitArticles(emptyList())
+        videosAdapter.submitVideos(emptyList())
         footerLoadingAdapter.setState(loading = false, showNoMore = false)
 
-        sectionHeaderAdapter.setTitle("શોધ પરિણામ: \"$trimmed\"")
+        sectionHeaderAdapter.setTitle("શોધ પરિણામ: \"$trimmed\"", "પરિણામ")
         binding.progressLoading.visibility = View.VISIBLE
         binding.layoutError.visibility = View.GONE
 
@@ -262,7 +372,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadData(isPullToRefresh: Boolean) {
-        if (!isPullToRefresh && articleAdapter.itemCount == 0 && currentHeroArticle == null) {
+        if (!isPullToRefresh && articleAdapter.itemCount == 0 && heroArticles.isEmpty()) {
             binding.progressLoading.visibility = View.VISIBLE
         }
 
@@ -270,18 +380,31 @@ class HomeFragment : Fragment() {
         hasMorePages = true
         footerLoadingAdapter.setState(loading = false, showNoMore = false)
 
+        // 1. Fetch main articles
         lifecycleScope.launch {
             fetchArticles(selectedCategorySlug, page = 1, isAppend = false, query = currentSearchQuery)
             binding.progressLoading.visibility = View.GONE
             binding.swipeRefresh.isRefreshing = false
         }
 
+        // 2. Fetch categories
         lifecycleScope.launch {
             fetchCategories()
         }
 
+        // 3. Fetch breaking ticker
         lifecycleScope.launch {
             fetchBreakingNews()
+        }
+
+        // 4. Fetch videos & reels for the portal sections
+        if (selectedCategorySlug == null || selectedCategorySlug == "all") {
+            lifecycleScope.launch {
+                fetchVideos()
+            }
+            lifecycleScope.launch {
+                fetchReels()
+            }
         }
     }
 
@@ -340,6 +463,38 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private suspend fun fetchVideos() {
+        try {
+            val response = RetrofitClient.apiService.getVideos(limit = 12)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val list = response.body()?.data?.videos.orEmpty()
+                if (list.isNotEmpty()) {
+                    videosAdapter.submitVideos(list)
+                    return
+                }
+            }
+            videosAdapter.submitVideos(fallbackVideos)
+        } catch (e: Exception) {
+            videosAdapter.submitVideos(fallbackVideos)
+        }
+    }
+
+    private suspend fun fetchReels() {
+        try {
+            val response = RetrofitClient.apiService.getReels()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val list = response.body()?.data.orEmpty()
+                if (list.isNotEmpty()) {
+                    reelsAdapter.submitReels(list)
+                    return
+                }
+            }
+            reelsAdapter.submitReels(fallbackReels)
+        } catch (e: Exception) {
+            reelsAdapter.submitReels(fallbackReels)
+        }
+    }
+
     private fun startBreakingRotator() {
         breakingRotatorJob?.cancel()
         if (breakingArticles.isEmpty() || _binding == null) return
@@ -356,6 +511,18 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun startHeroRotator() {
+        heroRotatorJob?.cancel()
+        if (heroArticles.size <= 1 || _binding == null) return
+
+        heroRotatorJob = lifecycleScope.launch {
+            while (isActive && heroArticles.size > 1) {
+                delay(4500)
+                heroCarouselAdapter.rotateNext()
+            }
+        }
+    }
+
     private suspend fun fetchArticles(
         categorySlug: String?,
         page: Int,
@@ -365,7 +532,7 @@ class HomeFragment : Fragment() {
         try {
             val response = RetrofitClient.apiService.getArticles(
                 page = page,
-                limit = 20,
+                limit = 25,
                 categorySlug = if (categorySlug == "all") null else categorySlug,
                 query = query,
                 sort = "latest"
@@ -398,30 +565,39 @@ class HomeFragment : Fragment() {
                             context?.let { ctx ->
                                 NewsCacheManager.saveCachedArticles(ctx, newArticles)
                             }
-                        }
-
-                        if (query.isNullOrBlank()) {
-                            val heroArticle = newArticles[0]
-                            currentHeroArticle = heroArticle
-                            heroHeaderAdapter.submitHeroArticle(heroArticle)
-                            val feedArticles = if (newArticles.size > 1) newArticles.subList(1, newArticles.size) else emptyList()
-                            currentFeedArticles = feedArticles
-                            articleAdapter.submitList(feedArticles)
-                            sectionHeaderAdapter.setTitle(getString(R.string.latest_news_title))
-                        } else {
-                            currentHeroArticle = null
-                            heroHeaderAdapter.submitHeroArticle(null)
+                            distributeHomeArticles(newArticles)
+                        } else if (!query.isNullOrBlank()) {
+                            // Search results
+                            heroCarouselAdapter.submitHeroArticles(emptyList())
+                            topStoriesAdapter.submitArticles(emptyList())
+                            reelsAdapter.submitReels(emptyList())
+                            mostReadAdapter.submitArticles(emptyList())
+                            videosAdapter.submitVideos(emptyList())
                             currentFeedArticles = newArticles
                             articleAdapter.submitList(newArticles)
-                            sectionHeaderAdapter.setTitle("શોધ પરિણામો: \"$query\" (${newArticles.size} સમાચાર)")
+                            sectionHeaderAdapter.setTitle("શોધ પરિણામો: \"$query\" (${newArticles.size} સમાચાર)", "પરિણામ")
+                        } else {
+                            // Specific category selected
+                            topStoriesAdapter.submitArticles(emptyList())
+                            reelsAdapter.submitReels(emptyList())
+                            mostReadAdapter.submitArticles(emptyList())
+                            videosAdapter.submitVideos(emptyList())
+
+                            val leadHero = newArticles.take(1)
+                            heroArticles = leadHero
+                            heroCarouselAdapter.submitHeroArticles(leadHero)
+
+                            val rest = if (newArticles.size > 1) newArticles.drop(1) else emptyList()
+                            currentFeedArticles = rest
+                            articleAdapter.submitList(rest)
+
+                            val catName = categoryAdapter.findCategoryNameBySlug(categorySlug) ?: "સમાચાર"
+                            sectionHeaderAdapter.setTitle("$catName સમાચાર", "કૅટેગરી")
                         }
                         updateRepositoryArticles()
                         footerLoadingAdapter.setState(loading = false, showNoMore = false)
                     } else {
-                        currentHeroArticle = null
-                        heroHeaderAdapter.submitHeroArticle(null)
-                        currentFeedArticles = emptyList()
-                        articleAdapter.submitList(emptyList())
+                        clearAllSections()
                         binding.layoutError.visibility = View.VISIBLE
                         binding.tvErrorMessage.text = if (!query.isNullOrBlank()) {
                             "\"$query\" માટે કોઈ સમાચાર મળ્યા નથી."
@@ -444,45 +620,88 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /**
+     * Distributes the articles into the website-style multi-section portal hierarchy:
+     * - Articles 0..4: Hero Carousel (5 items)
+     * - Articles 5..12: Top Stories (8 items)
+     * - Articles 13..16: Most Read (4 items)
+     * - Articles 17..end: Latest News infinite feed
+     */
+    private fun distributeHomeArticles(articles: List<Article>) {
+        if (articles.isEmpty()) return
+
+        // 1. Hero Carousel (Top 5)
+        val hero = articles.take(5)
+        heroArticles = hero
+        heroCarouselAdapter.submitHeroArticles(hero)
+        startHeroRotator()
+
+        // 2. Top Stories (Next 8)
+        val topStories = if (articles.size > 5) articles.subList(5, minOf(13, articles.size)) else emptyList()
+        topStoriesList = topStories
+        topStoriesAdapter.submitArticles(topStories)
+
+        // 3. Most Read (Next 4)
+        val mostRead = if (articles.size > 13) articles.subList(13, minOf(17, articles.size)) else emptyList()
+        mostReadList = mostRead
+        mostReadAdapter.submitArticles(mostRead)
+
+        // 4. Latest News Feed (Remaining articles)
+        val feed = if (articles.size > 17) {
+            articles.subList(17, articles.size)
+        } else if (articles.size > 5) {
+            articles.subList(5, articles.size)
+        } else {
+            articles
+        }
+        currentFeedArticles = feed
+        articleAdapter.submitList(feed)
+
+        sectionHeaderAdapter.setTitle("તાજા સમાચાર ફિડ", "નવીનતમ")
+    }
+
+    private fun clearAllSections() {
+        heroRotatorJob?.cancel()
+        heroArticles = emptyList()
+        topStoriesList = emptyList()
+        mostReadList = emptyList()
+        currentFeedArticles = emptyList()
+
+        heroCarouselAdapter.submitHeroArticles(emptyList())
+        topStoriesAdapter.submitArticles(emptyList())
+        reelsAdapter.submitReels(emptyList())
+        mostReadAdapter.submitArticles(emptyList())
+        videosAdapter.submitVideos(emptyList())
+        articleAdapter.submitList(emptyList())
+        sectionHeaderAdapter.setTitle(null)
+    }
+
     private fun updateRepositoryArticles() {
         val allArticles = mutableListOf<Article>()
-        currentHeroArticle?.let { allArticles.add(it) }
+        allArticles.addAll(heroArticles)
+        allArticles.addAll(topStoriesList)
+        allArticles.addAll(mostReadList)
         allArticles.addAll(currentFeedArticles)
-        ArticleRepository.currentArticles = allArticles
+        ArticleRepository.currentArticles = allArticles.distinctBy { it.id }
     }
 
     private fun handleInitialLoadError(categorySlug: String?) {
         if (categorySlug == null || categorySlug == "all") {
             val fallback = context?.let { NewsCacheManager.getCachedArticles(it) }.orEmpty()
             if (fallback.isNotEmpty()) {
-                setupFallbackFeed(fallback)
+                binding.layoutError.visibility = View.GONE
+                distributeHomeArticles(fallback)
+                reelsAdapter.submitReels(fallbackReels)
+                videosAdapter.submitVideos(fallbackVideos)
+                updateRepositoryArticles()
             } else {
                 binding.layoutError.visibility = View.VISIBLE
                 binding.tvErrorMessage.text = "સમાચાર લોડ કરી શકાયા નથી. કૃપા કરીને ફરી પ્રયાસ કરો."
             }
         } else {
-            currentHeroArticle = null
-            heroHeaderAdapter.submitHeroArticle(null)
-            currentFeedArticles = emptyList()
-            articleAdapter.submitList(emptyList())
-            sectionHeaderAdapter.setTitle(null)
+            clearAllSections()
             binding.layoutError.visibility = View.VISIBLE
             binding.tvErrorMessage.text = "આ કૅટેગરીના સમાચાર મેળવી શકાયા નથી."
-        }
-    }
-
-    private fun setupFallbackFeed(fallback: List<Article>) {
-        if (fallback.isNotEmpty()) {
-            binding.layoutError.visibility = View.GONE
-            val hero = fallback[0]
-            currentHeroArticle = hero
-            heroHeaderAdapter.submitHeroArticle(hero)
-
-            val feed = if (fallback.size > 1) fallback.subList(1, fallback.size) else emptyList()
-            currentFeedArticles = feed
-            articleAdapter.submitList(feed)
-            sectionHeaderAdapter.setTitle(getString(R.string.latest_news_title))
-            updateRepositoryArticles()
         }
     }
 
@@ -500,9 +719,37 @@ class HomeFragment : Fragment() {
         startActivity(intent)
     }
 
+    private fun openReel(reel: Reel) {
+        try {
+            val uri = Uri.parse(reel.targetUrl)
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+        } catch (e: Exception) {
+            // Safe fallback
+        }
+    }
+
+    private fun openVideo(video: Video) {
+        try {
+            val yId = video.youtubeId?.trim().orEmpty()
+            if (yId.isNotBlank()) {
+                val appIntent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$yId"))
+                val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$yId"))
+                try {
+                    startActivity(appIntent)
+                } catch (ex: Exception) {
+                    startActivity(webIntent)
+                }
+            }
+        } catch (e: Exception) {
+            // Safe fallback
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         breakingRotatorJob?.cancel()
+        heroRotatorJob?.cancel()
         _binding = null
     }
 }

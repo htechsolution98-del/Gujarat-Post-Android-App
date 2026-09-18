@@ -4,26 +4,44 @@
     android:layout_height="wrap_content"
     android:gravity="center"
     android:orientation="vertical"
-    android:paddingVertical="12dp">
+    android:paddingVertical="14dp">
 
     <!-- Bottom Pagination Loading Indicator -->
     <ProgressBar
         android:id="@+id/progress_pagination"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:indeterminateTint="@color/brand_primary"
         android:visibility="gone" />
 
-    <!-- End of Articles Message -->
-    <TextView
-        android:id="@+id/tv_no_more_articles"
+    <!-- End of Articles Message Container -->
+    <LinearLayout
+        android:id="@+id/layout_no_more"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:layout_marginBottom="12dp"
         android:gravity="center"
-        android:text="બધા સમાચાર દર્શાવવામાં આવ્યા છે"
-        android:textColor="@color/text_secondary"
-        android:textSize="12.5sp"
-        android:visibility="gone" />
+        android:orientation="vertical"
+        android:paddingVertical="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_no_more_articles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.04"
+            android:text="— તમામ સમાચાર લોડ થઈ ગયા —"
+            android:textColor="#94A3B8"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:fontFamily="sans-serif-black"
+            android:text="ગુજરાત પોસ્ટ • સત્ય અને સચોટ સમાચાર"
+            android:textColor="@color/brand_primary"
+            android:textSize="11sp" />
+    </LinearLayout>
+
 </LinearLayout>

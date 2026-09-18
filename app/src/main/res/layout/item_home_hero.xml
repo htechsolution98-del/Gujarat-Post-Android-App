@@ -5,85 +5,185 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="10dp"
-    android:layout_marginTop="4dp"
+    android:layout_marginTop="6dp"
     android:layout_marginBottom="8dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="@color/white"
+    app:cardBackgroundColor="@color/black"
     app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
-    app:strokeColor="#F1F5F9"
+    app:cardElevation="3dp"
+    app:strokeColor="#E2E8F0"
     app:strokeWidth="1dp">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="225dp">
 
-        <!-- Featured Big Image -->
-        <com.google.android.material.imageview.ShapeableImageView
+        <!-- Hero Background Image -->
+        <ImageView
             android:id="@+id/iv_hero_image"
             android:layout_width="match_parent"
-            android:layout_height="210dp"
+            android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:contentDescription="@string/app_name"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.None" />
+            android:contentDescription="@string/app_name" />
 
-        <!-- Hero Content Details -->
+        <!-- Deep Cinematic Dark Scrim Gradient Overlay -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_hero_gradient" />
+
+        <!-- Top Left: Flame / Featured News Badge -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_breaking_pill"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="4dp">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_flame"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/tv_hero_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:letterSpacing="0.04"
+                android:text="મુખ્ય સમાચાર"
+                android:textColor="@color/white"
+                android:textSize="10.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Top Right: Slide Counter (e.g. 1/5) -->
+        <TextView
+            android:id="@+id/tv_hero_slide_counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_reel_pill"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:text="1/5"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <!-- Bottom Content Overlay: Category, Title, Indicators -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:paddingHorizontal="14dp"
+            android:paddingBottom="12dp">
 
+            <!-- Category Pill Tag -->
+            <TextView
+                android:id="@+id/tv_hero_category"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_category_red"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:text="ગુજરાત"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <!-- Big Bold Headline -->
+            <TextView
+                android:id="@+id/tv_hero_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-black"
+                android:lineSpacingMultiplier="1.15"
+                android:maxLines="2"
+                android:shadowColor="#CC000000"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="3"
+                android:textColor="@color/white"
+                android:textSize="16.5sp"
+                android:textStyle="bold" />
+
+            <!-- Excerpt / Meta Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/tv_hero_category"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_breaking_pill"
-                    android:paddingHorizontal="9dp"
-                    android:paddingVertical="4dp"
-                    android:textColor="@color/white"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tv_hero_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textColor="#64748B"
-                    android:textSize="11.5sp" />
+                    android:textColor="#E2E8F0"
+                    android:textSize="11sp" />
+
+                <!-- Dot Indicators (5 dots) -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <LinearLayout
+                    android:id="@+id/layout_hero_dots"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/dot_0"
+                        android:layout_width="14dp"
+                        android:layout_height="5dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_dot_active" />
+
+                    <View
+                        android:id="@+id/dot_1"
+                        android:layout_width="5dp"
+                        android:layout_height="5dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_dot_inactive" />
+
+                    <View
+                        android:id="@+id/dot_2"
+                        android:layout_width="5dp"
+                        android:layout_height="5dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_dot_inactive" />
+
+                    <View
+                        android:id="@+id/dot_3"
+                        android:layout_width="5dp"
+                        android:layout_height="5dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_dot_inactive" />
+
+                    <View
+                        android:id="@+id/dot_4"
+                        android:layout_width="5dp"
+                        android:layout_height="5dp"
+                        android:background="@drawable/bg_dot_inactive" />
+                </LinearLayout>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tv_hero_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="sans-serif-medium"
-                android:lineSpacingMultiplier="1.25"
-                android:maxLines="3"
-                android:textColor="#0F172A"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tv_hero_excerpt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:ellipsize="end"
-                android:lineSpacingMultiplier="1.2"
-                android:maxLines="2"
-                android:textColor="#334155"
-                android:textSize="13sp" />
         </LinearLayout>
-    </LinearLayout>
+    </FrameLayout>
 </com.google.android.material.card.MaterialCardView>

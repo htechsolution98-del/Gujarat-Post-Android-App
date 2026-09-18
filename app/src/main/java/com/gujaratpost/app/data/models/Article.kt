@@ -209,3 +209,98 @@ data class ArticleDetailResponseData(
     @SerializedName("article")
     val article: Article? = null
 )
+
+data class Video(
+    @SerializedName("id")
+    val id: String? = null,
+
+    @SerializedName("title")
+    val title: String? = null,
+
+    @SerializedName("titleGu")
+    val titleGu: String? = null,
+
+    @SerializedName("titleHi")
+    val titleHi: String? = null,
+
+    @SerializedName("youtubeId")
+    val youtubeId: String? = null,
+
+    @SerializedName("thumbnail")
+    val thumbnail: String? = null,
+
+    @SerializedName("duration")
+    val duration: String? = null,
+
+    @SerializedName("publishedAt")
+    val publishedAt: String? = null
+) : Serializable {
+    val displayTitle: String
+        get() = titleGu?.takeIf { it.isNotBlank() } ?: title.orEmpty()
+
+    val resolvedThumbnailUrl: String
+        get() {
+            if (!thumbnail.isNullOrBlank() && thumbnail.startsWith("http") && !thumbnail.contains("frame0.jpg")) {
+                return thumbnail
+            }
+            val yId = youtubeId?.trim().orEmpty()
+            return if (yId.isNotBlank()) "https://i.ytimg.com/vi/$yId/hqdefault.jpg" else ""
+        }
+
+    val displayDuration: String
+        get() = duration?.takeIf { it.isNotBlank() } ?: "02:24"
+}
+
+data class Reel(
+    @SerializedName("id")
+    val id: String? = null,
+
+    @SerializedName("heading")
+    val heading: String? = null,
+
+    @SerializedName("headingGu")
+    val headingGu: String? = null,
+
+    @SerializedName("headingHi")
+    val headingHi: String? = null,
+
+    @SerializedName("instaUrl")
+    val instaUrl: String? = null,
+
+    @SerializedName("videoUrl")
+    val videoUrl: String? = null,
+
+    @SerializedName("thumbnail")
+    val thumbnail: String? = null,
+
+    @SerializedName("views")
+    val views: Long? = 0
+) : Serializable {
+    val displayHeading: String
+        get() = headingGu?.takeIf { it.isNotBlank() } ?: heading.orEmpty()
+
+    val targetUrl: String
+        get() = instaUrl?.takeIf { it.isNotBlank() } ?: videoUrl?.takeIf { it.isNotBlank() } ?: "https://www.instagram.com/gujaratpost.in/"
+
+    val displayViews: String?
+        get() {
+            val v = views ?: return null
+            if (v <= 0) return null
+            return when {
+                v >= 1000000 -> String.format("%.1fM", v / 1000000.0)
+                v >= 1000 -> "${v / 1000}K"
+                else -> "$v"
+            }
+        }
+}
+
+data class VideosResponseData(
+    @SerializedName("videos")
+    val videos: List<Video> = emptyList()
+)
+
+data class ReelsResponseData(
+    @SerializedName("reels")
+    val reels: List<Reel> = emptyList()
+)
+

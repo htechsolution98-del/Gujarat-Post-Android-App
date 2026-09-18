@@ -47,4 +47,19 @@ interface ApiService {
      */
     @GET("api/public/categories")
     suspend fun getCategories(): Response<ApiResponse<CategoriesResponseData>>
+
+    /**
+     * Get video stream
+     */
+    @GET("api/public/videos")
+    suspend fun getVideos(
+        @Query("limit") limit: Int = 12
+    ): Response<ApiResponse<com.gujaratpost.app.data.models.VideosResponseData>>
+
+    /**
+     * Get Instagram reels
+     */
+    @GET("api/public/reels")
+    suspend fun getReels(): Response<ApiResponse<List<com.gujaratpost.app.data.models.Reel>>>
 }
+
